@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-07 23:05:15
+#  Last Modified:  2019-09-07 23:21:51
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -91,7 +91,6 @@ class stockdata:
 
     def get_all_data_save(self):
         df_date = self.get_trade_cal("20150101")
-        df_date = df_date['cal_date']
 
         rd = self.redis.keys("20*")
         if rd:
@@ -99,7 +98,8 @@ class stockdata:
             ds = rd[-1].decode()
             print("start_date: ", ds)
             df_date = self.get_trade_cal(ds)
-            df_date = df_date['cal_date']
+
+        df_date = df_date['cal_date']
 
         for i in df_date.index:
             d = df_date.loc[i]
