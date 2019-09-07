@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-07 00:28:11
+#  Last Modified:  2019-09-07 23:05:15
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -69,9 +69,9 @@ class stockdata:
         return self.get_date_stock_info(self.get_today_date())
 
     # 20150101 --- today
-    def get_trade_cal(self):
+    def get_trade_cal(self, st):
         todaydate = datetime.datetime.now().strftime("%Y%m%d")
-        df = self.pro.query('trade_cal', start_date='20150101', end_date=todaydate)
+        df = self.pro.query('trade_cal', start_date=st, end_date=todaydate)
         return df[df.is_open == 1]
 
     def get_one_day_data_save(self, date):
@@ -90,8 +90,16 @@ class stockdata:
                 time.sleep(0.2)
 
     def get_all_data_save(self):
-        df_date = self.get_trade_cal()
+        df_date = self.get_trade_cal("20150101")
         df_date = df_date['cal_date']
+
+        rd = self.redis.keys("20*")
+        if rd:
+            rd.sort()
+            ds = rd[-1].decode()
+            print("start_date: ", ds)
+            df_date = self.get_trade_cal(ds)
+            df_date = df_date['cal_date']
 
         for i in df_date.index:
             d = df_date.loc[i]
