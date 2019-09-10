@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-10 17:24:40
+#  Last Modified:  2019-09-10 18:42:02
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -30,6 +30,7 @@ class stockdata:
         self.pro = ts.pro_api()
         # 原始数据存数据库0
         self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
+        # 加工后的数据存数据库1
         self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
 
     def get_today_date(self):
@@ -42,51 +43,47 @@ class stockdata:
         df = df.reset_index(drop=True)
         return df
 
+    #                                          date name
+    def check_exists_and_save(self, rds, func, key, filed):
+        re = self.r0.hexists(key, filed)
+        if re == 0:
+            print("downloading: ", key, filed)
+            data = func(trade_date=key)
+            rds.hset(key, filed, zlib.compress(pickle.dumps(data), 5))
+
     # 000001.SH 399001.SZ 399006.SZ
-    def get_index_daily_start_end_date_save(self, code, date):
-        df = self.pro.index_daily(ts_code=code, trade_date=date)
+    def get_index_daily_save(self, code, date):
         re = self.r0.hexists(date, code)
         if re == 0:
             print("downloading: ", date, code)
+            df = self.pro.index_daily(ts_code=code, trade_date=date)
             self.r0.hset(date, code, zlib.compress(pickle.dumps(df), 5))
-        return df
 
-    def get_index_daily_start_end_date_save_all(self, date):
-        self.get_index_daily_start_end_date_save('000001.SH', date)
-        self.get_index_daily_start_end_date_save('399001.SH', date)
-        self.get_index_daily_start_end_date_save('399006.SH', date)
+    def get_index_daily_save_all(self, date):
+        self.get_index_daily_save('000001.SH', date)
+        self.get_index_daily_save('399001.SH', date)
+        self.get_index_daily_save('399006.SH', date)
 
     def get_top_list_save(self, date):
-        df = self.pro.top_list(trade_date=date)
-        re = self.r0.hexists(date, 'top_list')
-        if re == 0:
-            print("downloading: ", date, "top_list")
-            self.r0.hset(date, 'top_list', zlib.compress(pickle.dumps(df), 5))
-        return df
+        self.check_exists_and_save(self.r0, self.pro.top_list, date, 'top_list')
 
     def get_top_inst_save(self, date):
-        df = self.pro.top_inst(trade_date=date)
-        re = self.r0.hexists(date, 'top_inst')
-        if re == 0:
-            print("downloading: ", date, "top_inst")
-            self.r0.hset(date, 'top_inst', zlib.compress(pickle.dumps(df), 5))
-        return df
+        self.check_exists_and_save(self.r0, self.pro.top_inst, date, 'top_inst')
 
     def get_stk_limit_save(self, date):
-        df = self.pro.stk_limit(trade_date=date)
-        re = self.r0.hexists(date, 'stk_limit')
-        if re == 0:
-            print("downloading: ", date, "stk_limit")
-            self.r0.hset(date, 'stk_limit', zlib.compress(pickle.dumps(df), 5))
-        return df
+        self.check_exists_and_save(self.r0, self.pro.stk_limit, date, 'stk_limit')
 
     def get_daily_save(self, date):
-        df = self.pro.daily(trade_date=date)
-        re = self.r0.hexists(date, 'daily')
-        if re == 0:
-            print("downloading: ", date, "daily")
-            self.r0.hset(date, 'daily', zlib.compress(pickle.dumps(df), 5))
-        return df
+        self.check_exists_and_save(self.r0, self.pro.daily, date, 'daily')
+
+    def get_hk_hold_save(self, date):
+        self.check_exists_and_save(self.r0, self.pro.hk_hold, date, 'hk_hold')
+
+    def get_block_trade_save(self, date):
+        self.check_exists_and_save(self.r0, self.pro.block_trade, date, 'block_trade')
+
+    def get_stk_holdertrade_save(self, date):
+        self.check_exists_and_save(self.r0, self.pro.stk_holdertrade, date, 'stk_holdertrade')
 
     # ********************************************************************
 
@@ -105,9 +102,6 @@ class stockdata:
 
     def get_stock_basics(self):
         return self.pro.get_stock_basics()
-
-    def get_date_stock_info(self, date):
-        return self.pro.daily(trade_date=date)
 
     def get_date_limitup(self, date):
         dfd = self.pro.daily(trade_date=date)
@@ -132,13 +126,13 @@ class stockdata:
                 time.sleep(0.15)
 
     def get_all_data_save(self):
-        ds = "20170101"
-
+        ds = "20150101"
+        '''
         rd = self.r0.keys("20*")
         if rd:
             rd.sort()
             ds = rd[-1].decode()
-
+        '''
         ds_date = self.get_trade_cal(ds)
         ds_date = ds_date['cal_date']
         ds_date = ds_date.reset_index(drop=True)
@@ -147,11 +141,14 @@ class stockdata:
 
         for i in ds_date.index:
             d = ds_date.loc[i]
-            self.get_index_daily_start_end_date_save_all(d)
+            self.get_index_daily_save_all(d)
             self.get_top_list_save(d)
             self.get_top_inst_save(d)
             self.get_stk_limit_save(d)
             self.get_daily_save(d)
+            # self.get_hk_hold_save(d)
+            # self.get_block_trade_save(d)
+            # self.get_stk_holdertrade_save(d)
 
             # self.get_one_day_data_save(d)
             # self.r.save()
@@ -162,7 +159,10 @@ startTime = datetime.datetime.now()
 # d = A.get_top_inst_save('20190906')
 # d = A.get_stock_number_date_last_ndays("600818.SH", "20180101", 40)
 # d = A.get_index_daily_start_end_date_save_all("20190906")
+
 A.get_all_data_save()
+# d = A.get_index_daily_start_end_date_save("000001.SH", "20190909")
+# print(d)
 # A.get_one_day_data_save('20190906')
 # d = A.get_date_limitup('20190909')
 # print(d)

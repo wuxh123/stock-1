@@ -28,6 +28,9 @@
        * 机构龙虎榜     (date,top_inst)
        * 每日涨跌停数值 (date,stk_limit)
        * 每日全市数据   (date,daily)
+       * 每日沪股通数据 (date,hk_hold)
+       * 大宗交易数据   (date,block_trade)
+       * 股东增减持     (date,stk_holdertrade)
 
 2. TBD
 
