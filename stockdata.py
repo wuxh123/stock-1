@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-07 23:21:51
+#  Last Modified:  2019-09-10 11:30:44
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -28,7 +28,7 @@ class stockdata:
             tk = pickle.load(f)
             ts.set_token(tk)
         self.pro = ts.pro_api()
-        self.redis = redis.Redis(host='127.0.0.1', port=6379)
+        self.redis = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379)
 
     def get_index_daily_start_end_date(self, code, st, end):
         return self.pro.index_daily(ts_code=code, start_date=st, end_date=end)
@@ -38,7 +38,6 @@ class stockdata:
 
     def get_stock_number_date_last_ndays(self, code, date, ndays):
         end = datetime.datetime.strptime(date, "%Y%m%d")
-        # st = end - datetime.timedelta(days=ndays)
         st = end - datetime.timedelta(days=ndays * 2)
         st = st.strftime("%Y%m%d")
         end = end.strftime("%Y%m%d")
@@ -55,29 +54,47 @@ class stockdata:
         return datetime.datetime.now().strftime("%Y%m%d")
 
     def get_date_limitup(self, date):
-        df = self.pro.daily(trade_date=date)
-        return df[round(df.pre_close * 1.1, 2) == df.close]
+        dfd = self.pro.daily(trade_date=date)
+        dfd = dfd[['ts_code', 'close', 'pct_chg']]
+        dfs = self.pro.stk_limit(trade_date=date)
+        dfs = dfs[['ts_code', 'up_limit']]
+        df = pd.merge(dfd, dfs, on='ts_code')
+        df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
+        df = df['ts_code']
+        df = df.reset_index(drop=True)
+        return df
 
     def get_date_limitdown(self, date):
-        df = self.pro.daily(trade_date=date)
-        return df[round(df.pre_close * 0.9, 2) == df.close]
+        dfd = self.pro.daily(trade_date=date)
+        dfd = dfd[['ts_code', 'close', 'pct_chg']]
+        dfs = self.pro.stk_limit(trade_date=date)
+        dfs = dfs[['ts_code', 'down_limit']]
+        df = pd.merge(dfd, dfs, on='ts_code')
+        df = df[(df.close == df.down_limit) & (df.pct_chg < -6.0) & (df.pct_chg > -12.0)]
+        return df
 
     def get_date_stock_info(self, date):
         return self.pro.daily(trade_date=date)
 
-    def get_today_stock_info(self):
-        return self.get_date_stock_info(self.get_today_date())
+    def get_top_list_save(self, date):
+        df = self.pro.top_list(trade_date=date)
+        re = self.redis.hexists(date, 'top_list')
+        if re == 0:
+            print("downloading: top_list", date)
+            self.redis.hset(date, 'top_list', zlib.compress(pickle.dumps(df), 5))
+        return df
 
-    # 20150101 --- today
     def get_trade_cal(self, st):
         todaydate = datetime.datetime.now().strftime("%Y%m%d")
         df = self.pro.query('trade_cal', start_date=st, end_date=todaydate)
-        return df[df.is_open == 1]
+        df = df[df.is_open == 1]
+        df = df.reset_index(drop=True)
+        return df
 
     def get_one_day_data_save(self, date):
         df_tscode = self.get_date_limitup(date)
         df_tscode = df_tscode['ts_code']
-        # print("downloading: ", date)
+        df_tscode = df_tscode.reset_index(drop=True)
 
         for i in df_tscode.index:
             c = df_tscode.loc[i]
@@ -87,24 +104,28 @@ class stockdata:
                 print("downloading: ", date, c)
                 df = self.get_stock_number_date_last_ndays(c, date, 40)
                 self.redis.hset(date, c, zlib.compress(pickle.dumps(df), 5))
-                time.sleep(0.2)
+                time.sleep(0.1)
 
     def get_all_data_save(self):
-        df_date = self.get_trade_cal("20150101")
+        ds = "20170101"
 
         rd = self.redis.keys("20*")
         if rd:
             rd.sort()
             ds = rd[-1].decode()
-            print("start_date: ", ds)
-            df_date = self.get_trade_cal(ds)
 
-        df_date = df_date['cal_date']
+        ds_date = self.get_trade_cal(ds)
+        ds_date = ds_date['cal_date']
+        ds_date = ds_date.reset_index(drop=True)
 
-        for i in df_date.index:
-            d = df_date.loc[i]
+        print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
+
+        '''
+        for i in ds_date.index:
+            d = ds_date.loc[i]
             self.get_one_day_data_save(d)
-            self.redis.save()
+            # self.redis.save()
+        '''
 
 
 A = stockdata()
@@ -113,6 +134,12 @@ A = stockdata()
 startTime = datetime.datetime.now()
 # A.get_one_day_data_save('20190903')
 A.get_all_data_save()
+# d = A.get_date_limitup('20190909')
+# d = A.get_top_list_save('20190909')
+# print(d)
+# d = A.get_trade_cal("20190901")
+# print(d[['ts_code', 'pre_close', 'close']])
+# print(d.shape)
 print("Time taken:", datetime.datetime.now() - startTime)
 '''
 print(df.shape)
