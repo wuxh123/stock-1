@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-11 14:03:18
+#  Last Modified:  2019-09-11 16:12:26
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -55,6 +55,10 @@ class stockdata:
             if data.empty is True:
                 print("redownloading: ", key, field)
                 data = func(trade_date=key)
+                '''
+                if data.empty is True:
+                    data = pd.DataFrame([[key, field, 'none']])
+                '''
                 rds.hset(key, field, zlib.compress(pickle.dumps(data), 5))
 
     # 000001.SH 399001.SZ 399006.SZ
@@ -92,12 +96,17 @@ class stockdata:
 
     def get_hk_hold_save(self, date):
         self.check_exists_and_save(self.r0, self.pro.hk_hold, date, 'hk_hold')
+        time.sleep(31)
 
     def get_block_trade_save(self, date):
         self.check_exists_and_save(self.r0, self.pro.block_trade, date, 'block_trade')
 
     def get_stk_holdertrade_save(self, date):
         self.check_exists_and_save(self.r0, self.pro.stk_holdertrade, date, 'stk_holdertrade')
+
+    def test(self, date):
+        data = self.pro.hk_hold(trade_date=date)
+        print(data)
 
     # ********************************************************************
 
@@ -140,7 +149,7 @@ class stockdata:
                 time.sleep(0.15)
 
     def get_all_data_save(self):
-        ds = "20150101"
+        ds = "20140101"
         '''
         rd = self.r0.keys("20*")
         if rd:
@@ -173,7 +182,7 @@ startTime = datetime.datetime.now()
 # d = A.get_top_inst_save('20190906')
 # d = A.get_stock_number_date_last_ndays("600818.SH", "20180101", 40)
 # d = A.get_index_daily_start_end_date_save_all("20190906")
-
+# A.test('20190719')
 # A.get_index_daily_save('399001.SZ', '20150105')
 A.get_all_data_save()
 # d = A.get_index_daily_start_end_date_save("000001.SH", "20190909")
