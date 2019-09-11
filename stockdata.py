@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-11 16:12:26
+#  Last Modified:  2019-09-11 17:43:36
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -108,6 +108,16 @@ class stockdata:
         data = self.pro.hk_hold(trade_date=date)
         print(data)
 
+    def delx(self):
+        ds_date = self.get_trade_cal('2014101')
+        ds_date = ds_date['cal_date']
+        ds_date = ds_date.reset_index(drop=True)
+
+        for i in ds_date.index:
+            d = ds_date.loc[i]
+            self.r0.hdel(d, '399006.SH')
+            self.r0.hdel(d, '399001.SH')
+
     # ********************************************************************
 
     def get_stock_number_start_end_date(self, code, st, end):
@@ -177,18 +187,22 @@ class stockdata:
             # self.r.save()
 
 
-A = stockdata()
-startTime = datetime.datetime.now()
+if __name__ == '__main__':
+    startTime = datetime.datetime.now()
+
+    A = stockdata()
+    A.get_all_data_save()
+
+    print("Time taken:", datetime.datetime.now() - startTime)
+
 # d = A.get_top_inst_save('20190906')
 # d = A.get_stock_number_date_last_ndays("600818.SH", "20180101", 40)
 # d = A.get_index_daily_start_end_date_save_all("20190906")
+# A.delx()
 # A.test('20190719')
 # A.get_index_daily_save('399001.SZ', '20150105')
-A.get_all_data_save()
 # d = A.get_index_daily_start_end_date_save("000001.SH", "20190909")
-# print(d)
 # A.get_one_day_data_save('20190906')
 # d = A.get_date_limitup('20190909')
-# print(d)
 # d = A.get_trade_cal("20190901")
-print("Time taken:", datetime.datetime.now() - startTime)
+# print(d)
