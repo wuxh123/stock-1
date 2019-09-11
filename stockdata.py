@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-11 17:43:36
+#  Last Modified:  2019-09-11 17:55:43
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -49,16 +49,7 @@ class stockdata:
         if re == 0:
             print("downloading: ", key, field)
             data = func(trade_date=key)
-            rds.hset(key, field, zlib.compress(pickle.dumps(data), 5))
-        else:
-            data = pickle.loads(zlib.decompress(rds.hget(key, field)))
-            if data.empty is True:
-                print("redownloading: ", key, field)
-                data = func(trade_date=key)
-                '''
-                if data.empty is True:
-                    data = pd.DataFrame([[key, field, 'none']])
-                '''
+            if data.empty is False:
                 rds.hset(key, field, zlib.compress(pickle.dumps(data), 5))
 
     # 000001.SH 399001.SZ 399006.SZ
@@ -67,13 +58,7 @@ class stockdata:
         if re == 0:
             print("downloading: ", date, code)
             data = self.pro.index_daily(ts_code=code, trade_date=date)
-            self.r0.hset(date, code, zlib.compress(pickle.dumps(data), 5))
-            time.sleep(0.6)
-        else:
-            data = pickle.loads(zlib.decompress(self.r0.hget(date, code)))
-            if data.empty is True:
-                print("redownloading: ", date, code)
-                data = self.pro.index_daily(ts_code=code, trade_date=date)
+            if data.empty is False:
                 self.r0.hset(date, code, zlib.compress(pickle.dumps(data), 5))
                 time.sleep(0.6)
 
