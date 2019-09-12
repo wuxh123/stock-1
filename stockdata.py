@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-12 14:23:27
+#  Last Modified:  2019-09-12 14:26:50
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -189,3 +189,12 @@ if __name__ == '__main__':
         print(d)
 
     print("Time taken:", datetime.datetime.now() - startTime)
+
+
+# import zlib, pickle
+# redis.hset(key_name, field, df.to_msgpack(compress='zlib'))
+# pd.read_msgpack(redis.hget(key_name, field))
+
+# import zlib, pickle
+# redis.hset(key_name, field, zlib.compress(pickle.dumps(df), 5))
+# df = pickle.loads(zlib.decompress(redis.hget(key_name, field)))

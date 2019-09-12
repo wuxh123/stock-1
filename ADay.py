@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-17 15:31:48
-#  Last Modified:  2019-08-31 13:50:02
+#  Last Modified:  2019-09-12 14:28:36
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -18,7 +18,6 @@ import numpy as np
 from datetime import datetime
 import pandas as pd
 import tushare as ts
-# import matplotlib.pyplot as plt
 from tabulate import tabulate
 
 today = datetime.now().strftime('%Y%m%d')
