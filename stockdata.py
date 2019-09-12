@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-12 15:17:15
+#  Last Modified:  2019-09-12 15:25:33
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -94,7 +94,7 @@ class stockdata:
     def get_hk_hold_save(self, date):
         b = self.check_exists_and_save(self.r0, self.pro.hk_hold, date, 'hk_hold')
         if b:
-            time.sleep(31)
+            time.sleep(41)
 
     def get_block_trade_save(self, date):
         b = self.check_exists_and_save(self.r0, self.pro.block_trade, date, 'block_trade')
