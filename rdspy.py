@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-10 15:42:58
-#  Last Modified:  2019-09-12 13:00:13
+#  Last Modified:  2019-09-12 16:06:20
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -19,6 +19,7 @@ import zlib
 import pandas as pd
 
 rr = r.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
+r1 = r.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
 
 # redis.hset(key_name, field, zlib.compress(pickle.dumps(df), 5))
 # df = pickle.loads(zlib.decompress(redis.hget(key_name, field)))
@@ -27,7 +28,8 @@ rr = r.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
 
 # df1 = pickle.loads(zlib.decompress(rr.hget("20140102", "block_trade")))
 # df1 = pickle.loads(zlib.decompress(rr.hget("20181214", "top_list")))
-df1 = pickle.loads(zlib.decompress(rr.hget("20181218", "top_inst")))
+# df1 = pickle.loads(zlib.decompress(rr.hget("20181218", "top_inst")))
+df1 = pickle.loads(zlib.decompress(r1.hget("20160525", "up_limit")))
 print(df1)
 print(type(df1))
 

@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-12 15:28:42
+#  Last Modified:  2019-09-12 16:04:22
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -29,7 +29,8 @@ class stockdata:
             tk = pickle.load(f)
             ts.set_token(tk)
         # 起始日期
-        self.st_date = "20150101"
+        # self.st_date = "20150101"
+        self.st_date = "20140101"
         # ts 接口
         self.pro = ts.pro_api()
         # 原始数据存数据库0
@@ -39,6 +40,9 @@ class stockdata:
 
     def get_today_date(self):
         return datetime.datetime.now().strftime("%Y%m%d")
+
+    def get_stock_basics(self):
+        return self.pro.get_stock_basics()
 
     def get_trade_cal_list(self):
         todaydate = self.get_today_date()
@@ -121,6 +125,24 @@ class stockdata:
                     self.r0.hdel(d, fs)
 
     # ********************************************************************
+    # 处理数据 从数据库0 读取数据 处理好后 存到数据库1
+    def handle_date_limitup_save(self, date):
+        ue = self.r1.hexists(date, 'up_limit')
+        dr = self.r0.hexists(date, 'daily')
+        ds = self.r0.hexists(date, 'stk_limit')
+        if ue == 0 and dr == 1 and ds == 1:
+            dfd = pickle.loads(zlib.decompress(self.r0.hget(date, 'daily')))
+            dfd = dfd[['ts_code', 'close', 'pct_chg']]
+            dfs = pickle.loads(zlib.decompress(self.r0.hget(date, 'stk_limit')))
+            dfs = dfs[['ts_code', 'up_limit']]
+            df = pd.merge(dfd, dfs, on='ts_code')
+            df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
+            df = df['ts_code']
+            df = df.reset_index(drop=True)
+
+            if df.empty is False:
+                self.r1.hset(date, 'up_limit', zlib.compress(pickle.dumps(df), 5))
+                print("handle: ", date, 'up_limit', " ok")
 
     def get_stock_number_start_end_date(self, code, st, end):
         return self.pro.daily(ts_code=code, start_date=st, end_date=end)
@@ -135,20 +157,6 @@ class stockdata:
             return df
         return df[0:ndays]
 
-    def get_stock_basics(self):
-        return self.pro.get_stock_basics()
-
-    def get_date_limitup(self, date):
-        dfd = self.pro.daily(trade_date=date)
-        dfd = dfd[['ts_code', 'close', 'pct_chg']]
-        dfs = self.pro.stk_limit(trade_date=date)
-        dfs = dfs[['ts_code', 'up_limit']]
-        df = pd.merge(dfd, dfs, on='ts_code')
-        df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
-        df = df['ts_code']
-        df = df.reset_index(drop=True)
-        return df
-
     def get_one_day_data_save(self, date):
         df_tscode = self.get_date_limitup(date)
         for i in df_tscode.index:
@@ -160,10 +168,10 @@ class stockdata:
                 self.r.hset(date, c, zlib.compress(pickle.dumps(df), 5))
                 time.sleep(0.15)
 
+    # 下载时间短的
     def get_all_data_save(self):
         ds_date = self.get_trade_cal_list()
         print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
-
         for d in ds_date:
             self.get_index_daily_save_all(d)
             self.get_top_list_save(d)
@@ -172,13 +180,20 @@ class stockdata:
             self.get_daily_save(d)
             self.get_block_trade_save(d)
 
+    # 时间长的单独下载
     def get_all_data2_save(self):
         ds_date = self.get_trade_cal_list()
         print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
-
         for d in ds_date:
             self.get_hk_hold_save(d)
             # self.get_stk_holdertrade_save(d)
+
+    # 处理数据
+    def handle_data(self):
+        ds_date = self.get_trade_cal_list()
+        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
+        for d in ds_date:
+            self.handle_date_limitup_save(d)
 
 
 if __name__ == '__main__':
@@ -194,9 +209,11 @@ if __name__ == '__main__':
         # download other
         elif sys.argv[1] == 'd2':
             A.get_all_data2_save()
+        elif sys.argv[1] == 'h':
+            A.handle_data()
     else:
-        d = A.get_trade_cal_list()
-        print(d)
+        # d = A.get_trade_cal_list()
+        A.handle_date_limitup_save('20140103')
 
     print("Time taken:", datetime.datetime.now() - startTime)
 
