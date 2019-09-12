@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-12 14:38:18
+#  Last Modified:  2019-09-12 15:15:13
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -51,21 +51,28 @@ class stockdata:
     #                                          date name
     def check_exists_and_save(self, rds, func, key, field):
         re = rds.hexists(key, field)
+        ret = False
         if re == 0:
-            print("downloading: ", key, field)
             data = func(trade_date=key)
+            ret = True
             if data.empty is False:
                 rds.hset(key, field, zlib.compress(pickle.dumps(data), 5))
+                print("downloading: ", key, field, " ok")
+            else:
+                print("downloading: ", key, field, " error")
+        return ret
 
     # 000001.SH 399001.SZ 399006.SZ
     def get_index_daily_save(self, code, date):
         re = self.r0.hexists(date, code)
         if re == 0:
-            print("downloading: ", date, code)
             data = self.pro.index_daily(ts_code=code, trade_date=date)
+            time.sleep(0.6)
             if data.empty is False:
                 self.r0.hset(date, code, zlib.compress(pickle.dumps(data), 5))
-                time.sleep(0.6)
+                print("downloading: ", date, code, " ok")
+            else:
+                print("downloading: ", date, code, " error")
 
     def get_index_daily_save_all(self, date):
         self.get_index_daily_save('000001.SH', date)
@@ -89,8 +96,9 @@ class stockdata:
         time.sleep(31)
 
     def get_block_trade_save(self, date):
-        self.check_exists_and_save(self.r0, self.pro.block_trade, date, 'block_trade')
-        time.sleep(0.8)
+        b = self.check_exists_and_save(self.r0, self.pro.block_trade, date, 'block_trade')
+        if b:
+            time.sleep(0.8)
 
     def get_stk_holdertrade_save(self, date):
         self.check_exists_and_save(self.r0, self.pro.stk_holdertrade, date, 'stk_holdertrade')
