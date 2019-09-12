@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-12 14:26:50
+#  Last Modified:  2019-09-12 14:38:18
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -90,6 +90,7 @@ class stockdata:
 
     def get_block_trade_save(self, date):
         self.check_exists_and_save(self.r0, self.pro.block_trade, date, 'block_trade')
+        time.sleep(0.8)
 
     def get_stk_holdertrade_save(self, date):
         self.check_exists_and_save(self.r0, self.pro.stk_holdertrade, date, 'stk_holdertrade')
@@ -99,7 +100,7 @@ class stockdata:
         print(data)
 
     def check_all_data(self):
-        ds_date = self.get_trade_list()
+        ds_date = self.get_trade_cal_list()
 
         for d in ds_date:
             dk = self.r0.hkeys(d)
@@ -160,6 +161,7 @@ class stockdata:
             self.get_top_inst_save(d)
             self.get_stk_limit_save(d)
             self.get_daily_save(d)
+            self.get_block_trade_save(d)
 
     def get_all_data2_save(self):
         ds_date = self.get_trade_cal_list()
@@ -167,7 +169,6 @@ class stockdata:
 
         for d in ds_date:
             self.get_hk_hold_save(d)
-            self.get_block_trade_save(d)
             # self.get_stk_holdertrade_save(d)
 
 
@@ -183,7 +184,7 @@ if __name__ == '__main__':
             A.get_all_data_save()
         # download other
         elif sys.argv[1] == 'd2':
-            pass
+            A.get_all_data2_save()
     else:
         d = A.get_trade_cal_list()
         print(d)
