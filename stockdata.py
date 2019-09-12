@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-12 15:25:33
+#  Last Modified:  2019-09-12 15:28:42
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -29,7 +29,7 @@ class stockdata:
             tk = pickle.load(f)
             ts.set_token(tk)
         # 起始日期
-        self.st_date = "20140101"
+        self.st_date = "20150101"
         # ts 接口
         self.pro = ts.pro_api()
         # 原始数据存数据库0
