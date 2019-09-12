@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-12 16:04:22
+#  Last Modified:  2019-09-12 16:37:36
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -28,9 +28,6 @@ class stockdata:
         with open('tk.pkl', 'rb') as f:
             tk = pickle.load(f)
             ts.set_token(tk)
-        # 起始日期
-        # self.st_date = "20150101"
-        self.st_date = "20140101"
         # ts 接口
         self.pro = ts.pro_api()
         # 原始数据存数据库0
@@ -44,9 +41,9 @@ class stockdata:
     def get_stock_basics(self):
         return self.pro.get_stock_basics()
 
-    def get_trade_cal_list(self):
+    def get_trade_cal_list(self, date='20140101'):
         todaydate = self.get_today_date()
-        df = self.pro.query('trade_cal', start_date=self.st_date, end_date=todaydate)
+        df = self.pro.query('trade_cal', start_date=date, end_date=todaydate)
         df = df[df.is_open == 1]
         df = df['cal_date']
         df = df.reset_index(drop=True)
@@ -144,6 +141,12 @@ class stockdata:
                 self.r1.hset(date, 'up_limit', zlib.compress(pickle.dumps(df), 5))
                 print("handle: ", date, 'up_limit', " ok")
 
+    def handle_date_limitup_last_40days_save(self, date):
+        ue = self.r1.hexists(date, 'up_limit')
+        if ue == 1:
+            print(date, "up_limit", "exists")
+            pass
+
     def get_stock_number_start_end_date(self, code, st, end):
         return self.pro.daily(ts_code=code, start_date=st, end_date=end)
 
@@ -212,8 +215,10 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'h':
             A.handle_data()
     else:
-        # d = A.get_trade_cal_list()
-        A.handle_date_limitup_save('20140103')
+        # d = A.get_trade_cal_list("20150101")
+        # print(d)
+        # A.handle_date_limitup_save('20140103')
+        A.handle_date_limitup_last_40days_save('20140103')
 
     print("Time taken:", datetime.datetime.now() - startTime)
 
