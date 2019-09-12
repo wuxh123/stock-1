@@ -6,13 +6,14 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-12 12:40:38
+#  Last Modified:  2019-09-12 14:23:27
 #       Revision:  none
 #       Compiler:  gcc
 #
 #         Author:  zt ()
 #   Organization:
 
+import sys
 import pickle
 import time
 import datetime
@@ -29,6 +30,7 @@ class stockdata:
             ts.set_token(tk)
         # 起始日期
         self.st_date = "20140101"
+        # ts 接口
         self.pro = ts.pro_api()
         # 原始数据存数据库0
         self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
@@ -38,10 +40,11 @@ class stockdata:
     def get_today_date(self):
         return datetime.datetime.now().strftime("%Y%m%d")
 
-    def get_trade_cal(self, st):
+    def get_trade_cal_list(self):
         todaydate = self.get_today_date()
-        df = self.pro.query('trade_cal', start_date=st, end_date=todaydate)
+        df = self.pro.query('trade_cal', start_date=self.st_date, end_date=todaydate)
         df = df[df.is_open == 1]
+        df = df['cal_date']
         df = df.reset_index(drop=True)
         return df
 
@@ -96,12 +99,9 @@ class stockdata:
         print(data)
 
     def check_all_data(self):
-        ds_date = self.get_trade_cal(self.st_date)
-        ds_date = ds_date['cal_date']
-        ds_date = ds_date.reset_index(drop=True)
+        ds_date = self.get_trade_list()
 
-        for i in ds_date.index:
-            d = ds_date.loc[i]
+        for d in ds_date:
             dk = self.r0.hkeys(d)
             for f in dk:
                 fs = f.decode()
@@ -151,32 +151,41 @@ class stockdata:
                 time.sleep(0.15)
 
     def get_all_data_save(self):
-        ds_date = self.get_trade_cal(self.st_date)
-        ds_date = ds_date['cal_date']
-        ds_date = ds_date.reset_index(drop=True)
-
+        ds_date = self.get_trade_cal_list()
         print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
 
-        for i in ds_date.index:
-            d = ds_date.loc[i]
+        for d in ds_date:
             self.get_index_daily_save_all(d)
             self.get_top_list_save(d)
             self.get_top_inst_save(d)
             self.get_stk_limit_save(d)
             self.get_daily_save(d)
-            # self.get_hk_hold_save(d)
-            # self.get_block_trade_save(d)
-            # self.get_stk_holdertrade_save(d)
 
-            # self.get_one_day_data_save(d)
-            # self.r.save()
+    def get_all_data2_save(self):
+        ds_date = self.get_trade_cal_list()
+        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
+
+        for d in ds_date:
+            self.get_hk_hold_save(d)
+            self.get_block_trade_save(d)
+            # self.get_stk_holdertrade_save(d)
 
 
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
-
     A = stockdata()
-    # A.get_all_data_save()
-    A.check_all_data()
+    if len(sys.argv) > 1:
+        # check data del empty
+        if sys.argv[1] == 'c':
+            A.check_all_data()
+        # download index_daily top stk daily
+        elif sys.argv[1] == 'd1':
+            A.get_all_data_save()
+        # download other
+        elif sys.argv[1] == 'd2':
+            pass
+    else:
+        d = A.get_trade_cal_list()
+        print(d)
 
     print("Time taken:", datetime.datetime.now() - startTime)
