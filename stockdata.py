@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-12 16:37:36
+#  Last Modified:  2019-09-14 00:38:44
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -109,9 +109,8 @@ class stockdata:
         data = self.pro.hk_hold(trade_date=date)
         print(data)
 
-    def check_all_data(self):
+    def check_all_download_data(self):
         ds_date = self.get_trade_cal_list()
-
         for d in ds_date:
             dk = self.r0.hkeys(d)
             for f in dk:
@@ -120,6 +119,28 @@ class stockdata:
                 if data.empty is True:
                     print("del empty: ", d, fs)
                     self.r0.hdel(d, fs)
+
+    # ********************************************************************
+    # 下载数据
+    # 下载时间短的
+    def get_all_data_save(self):
+        ds_date = self.get_trade_cal_list()
+        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
+        for d in ds_date:
+            self.get_index_daily_save_all(d)
+            self.get_top_list_save(d)
+            self.get_top_inst_save(d)
+            self.get_stk_limit_save(d)
+            self.get_daily_save(d)
+            self.get_block_trade_save(d)
+
+    # 时间长的单独下载
+    def get_all_data2_save(self):
+        ds_date = self.get_trade_cal_list()
+        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
+        for d in ds_date:
+            self.get_hk_hold_save(d)
+            # self.get_stk_holdertrade_save(d)
 
     # ********************************************************************
     # 处理数据 从数据库0 读取数据 处理好后 存到数据库1
@@ -141,62 +162,44 @@ class stockdata:
                 self.r1.hset(date, 'up_limit', zlib.compress(pickle.dumps(df), 5))
                 print("handle: ", date, 'up_limit', " ok")
 
+    # 处理数据
+    def handle_all_date_limitup_save(self):
+        ds_date = self.get_trade_cal_list()
+        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
+        for d in ds_date:
+            self.handle_date_limitup_save(d)
+
+    # 选定标的次日表现存贮，用于修正学习方向。
+    def handle_all_date_limitup_nextday_save(self):
+        ds_date = self.get_trade_cal_list()
+        d = ds_date[:-1]
+        for i in range(len(d)):
+            dt = d[i]
+            if self.r1.hexists(dt, 'up_limit_nextday') == 1:
+                return
+                # pass
+
+            if self.r1.hexists(dt, 'up_limit') == 0:
+                return
+            dtdf = pickle.loads(zlib.decompress(self.r1.hget(dt, 'up_limit')))
+
+            nxdt = ds_date[i + 1]
+            if self.r0.hexists(nxdt, 'daily') == 0:
+                return
+            nxdtdf = pickle.loads(zlib.decompress(self.r0.hget(nxdt, 'daily')))
+
+            a = nxdtdf[nxdtdf.ts_code.isin(dtdf)]
+            a = a.sort_values("pct_chg", ascending=False)
+            a = a.reset_index(drop=True)
+            if a.empty is False:
+                self.r1.hset(dt, 'up_limit_nextday', zlib.compress(pickle.dumps(a), 5))
+                print("handle: ", dt, 'up_limit_nextday', " ok")
+
     def handle_date_limitup_last_40days_save(self, date):
         ue = self.r1.hexists(date, 'up_limit')
         if ue == 1:
             print(date, "up_limit", "exists")
             pass
-
-    def get_stock_number_start_end_date(self, code, st, end):
-        return self.pro.daily(ts_code=code, start_date=st, end_date=end)
-
-    def get_stock_number_date_last_ndays(self, code, date, ndays):
-        end = datetime.datetime.now()
-        st = end - datetime.timedelta(days=ndays * 2)
-        st = st.strftime("%Y%m%d")
-        end = end.strftime("%Y%m%d")
-        df = self.get_stock_number_start_end_date(code, st, end)
-        if df.shape[0] <= ndays:
-            return df
-        return df[0:ndays]
-
-    def get_one_day_data_save(self, date):
-        df_tscode = self.get_date_limitup(date)
-        for i in df_tscode.index:
-            c = df_tscode.loc[i]
-            re = self.r.hexists(date, c)
-            if (re == 0):
-                print("downloading: ", date, c)
-                df = self.get_stock_number_date_last_ndays(c, date, 40)
-                self.r.hset(date, c, zlib.compress(pickle.dumps(df), 5))
-                time.sleep(0.15)
-
-    # 下载时间短的
-    def get_all_data_save(self):
-        ds_date = self.get_trade_cal_list()
-        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
-        for d in ds_date:
-            self.get_index_daily_save_all(d)
-            self.get_top_list_save(d)
-            self.get_top_inst_save(d)
-            self.get_stk_limit_save(d)
-            self.get_daily_save(d)
-            self.get_block_trade_save(d)
-
-    # 时间长的单独下载
-    def get_all_data2_save(self):
-        ds_date = self.get_trade_cal_list()
-        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
-        for d in ds_date:
-            self.get_hk_hold_save(d)
-            # self.get_stk_holdertrade_save(d)
-
-    # 处理数据
-    def handle_data(self):
-        ds_date = self.get_trade_cal_list()
-        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
-        for d in ds_date:
-            self.handle_date_limitup_save(d)
 
 
 if __name__ == '__main__':
@@ -205,7 +208,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         # check data del empty
         if sys.argv[1] == 'c':
-            A.check_all_data()
+            A.check_all_download_data()
         # download index_daily top stk daily
         elif sys.argv[1] == 'd1':
             A.get_all_data_save()
@@ -213,12 +216,14 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'd2':
             A.get_all_data2_save()
         elif sys.argv[1] == 'h':
-            A.handle_data()
+            A.handle_all_date_limitup_save()
+            A.handle_all_date_limitup_nextday_save()
     else:
         # d = A.get_trade_cal_list("20150101")
         # print(d)
         # A.handle_date_limitup_save('20140103')
-        A.handle_date_limitup_last_40days_save('20140103')
+        # A.handle_date_limitup_last_40days_save('20140103')
+        A.handle_all_date_limitup_nextday_save()
 
     print("Time taken:", datetime.datetime.now() - startTime)
 
@@ -230,3 +235,30 @@ if __name__ == '__main__':
 # import zlib, pickle
 # redis.hset(key_name, field, zlib.compress(pickle.dumps(df), 5))
 # df = pickle.loads(zlib.decompress(redis.hget(key_name, field)))
+#
+# nxdtdf = nxdtdf.drop(index=(nxdtdf.loc[nxdtdf.ts_code == '002232.SZ'].index))
+'''
+def get_stock_number_start_end_date(self, code, st, end):
+    return self.pro.daily(ts_code=code, start_date=st, end_date=end)
+
+def get_stock_number_date_last_ndays(self, code, date, ndays):
+    end = datetime.datetime.now()
+    st = end - datetime.timedelta(days=ndays * 2)
+    st = st.strftime("%Y%m%d")
+    end = end.strftime("%Y%m%d")
+    df = self.get_stock_number_start_end_date(code, st, end)
+    if df.shape[0] <= ndays:
+        return df
+    return df[0:ndays]
+
+def get_one_day_data_save(self, date):
+    df_tscode = self.get_date_limitup(date)
+    for i in df_tscode.index:
+        c = df_tscode.loc[i]
+        re = self.r.hexists(date, c)
+        if (re == 0):
+            print("downloading: ", date, c)
+            df = self.get_stock_number_date_last_ndays(c, date, 40)
+            self.r.hset(date, c, zlib.compress(pickle.dumps(df), 5))
+            time.sleep(0.15)
+'''

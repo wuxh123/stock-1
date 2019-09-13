@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-10 15:42:58
-#  Last Modified:  2019-09-12 16:16:15
+#  Last Modified:  2019-09-14 00:31:01
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -26,13 +26,14 @@ r1 = r.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
 # a = rr.hkeys("20190910")
 # a.sort()
 
-# df1 = pickle.loads(zlib.decompress(rr.hget("20140102", "block_trade")))
+# df1 = pickle.loads(zlib.decompress(rr.hget("20160104", "block_trade")))
+df1 = pickle.loads(zlib.decompress(rr.hget("20160107", "block_trade")))
 # df1 = pickle.loads(zlib.decompress(rr.hget("20181214", "top_list")))
 # df1 = pickle.loads(zlib.decompress(rr.hget("20181218", "top_inst")))
-df1 = pickle.loads(zlib.decompress(rr.hget("20150123", "daily")))
+# df1 = pickle.loads(zlib.decompress(rr.hget("20150123", "daily")))
+# df1 = pickle.loads(zlib.decompress(r1.hget("20190911", "up_limit_nextday")))
 # df1 = pickle.loads(zlib.decompress(r1.hget("20160525", "up_limit")))
-a = df1['pct_chg'].mean()
-print(a)
+print(df1)
 # print(df1)
 # print(type(df1))
 
