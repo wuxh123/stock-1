@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-14 00:38:44
+#  Last Modified:  2019-09-14 16:14:18
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -31,9 +31,14 @@ class stockdata:
         # ts 接口
         self.pro = ts.pro_api()
         # 原始数据存数据库0
-        self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
+        # self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
+        self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
         # 加工后的数据存数据库1
+        # self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
         self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
+        # 训练用数据存数据库2
+        # self.r2 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
+        self.r2 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=2)
 
     def get_today_date(self):
         return datetime.datetime.now().strftime("%Y%m%d")
@@ -41,12 +46,18 @@ class stockdata:
     def get_stock_basics(self):
         return self.pro.get_stock_basics()
 
-    def get_trade_cal_list(self, date='20140101'):
+    def get_trade_cal_list(self):
+        df = pickle.loads(zlib.decompress(self.r0.get('trade_cal')))
+        return df
+
+    def download_trade_cal_list(self):
         todaydate = self.get_today_date()
-        df = self.pro.query('trade_cal', start_date=date, end_date=todaydate)
+        df = self.pro.query('trade_cal', start_date='20140101', end_date=todaydate)
         df = df[df.is_open == 1]
         df = df['cal_date']
         df = df.reset_index(drop=True)
+        self.r0.set('trade_cal', zlib.compress(pickle.dumps(df), 5))
+        print("downloading: ", 'trade_cal ok')
         return df
 
     #                                          date name
@@ -58,13 +69,13 @@ class stockdata:
             ret = True
             if data.empty is False:
                 rds.hset(key, field, zlib.compress(pickle.dumps(data), 5))
-                print("downloading: ", key, field, " ok")
+                print("save: ", key, field, " ok")
             else:
-                print("downloading: ", key, field, " error")
+                print("save: ", key, field, " error")
         return ret
 
     # 000001.SH 399001.SZ 399006.SZ
-    def get_index_daily_save(self, code, date):
+    def download_index_daily(self, code, date):
         re = self.r0.hexists(date, code)
         if re == 0:
             data = self.pro.index_daily(ts_code=code, trade_date=date)
@@ -75,21 +86,21 @@ class stockdata:
             else:
                 print("downloading: ", date, code, " error")
 
-    def get_index_daily_save_all(self, date):
-        self.get_index_daily_save('000001.SH', date)
-        self.get_index_daily_save('399001.SZ', date)
-        self.get_index_daily_save('399006.SZ', date)
+    def download_index_daily_all(self, date):
+        self.download_index_daily('000001.SH', date)
+        self.download_index_daily('399001.SZ', date)
+        self.download_index_daily('399006.SZ', date)
 
-    def get_top_list_save(self, date):
+    def download_top_list(self, date):
         self.check_exists_and_save(self.r0, self.pro.top_list, date, 'top_list')
 
-    def get_top_inst_save(self, date):
+    def download_top_inst(self, date):
         self.check_exists_and_save(self.r0, self.pro.top_inst, date, 'top_inst')
 
-    def get_stk_limit_save(self, date):
+    def download_stk_limit(self, date):
         self.check_exists_and_save(self.r0, self.pro.stk_limit, date, 'stk_limit')
 
-    def get_daily_save(self, date):
+    def downlaod_daily(self, date):
         self.check_exists_and_save(self.r0, self.pro.daily, date, 'daily')
 
     def get_hk_hold_save(self, date):
@@ -97,7 +108,7 @@ class stockdata:
         if b:
             time.sleep(41)
 
-    def get_block_trade_save(self, date):
+    def download_block_trade(self, date):
         b = self.check_exists_and_save(self.r0, self.pro.block_trade, date, 'block_trade')
         if b:
             time.sleep(0.8)
@@ -123,16 +134,16 @@ class stockdata:
     # ********************************************************************
     # 下载数据
     # 下载时间短的
-    def get_all_data_save(self):
+    def download_all_data(self):
         ds_date = self.get_trade_cal_list()
         print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
-            self.get_index_daily_save_all(d)
-            self.get_top_list_save(d)
-            self.get_top_inst_save(d)
-            self.get_stk_limit_save(d)
-            self.get_daily_save(d)
-            self.get_block_trade_save(d)
+            self.download_index_daily_all(d)
+            self.download_top_list(d)
+            self.download_top_inst(d)
+            self.download_stk_limit(d)
+            self.download_daily(d)
+            self.download_block_trade(d)
 
     # 时间长的单独下载
     def get_all_data2_save(self):
@@ -195,11 +206,33 @@ class stockdata:
                 self.r1.hset(dt, 'up_limit_nextday', zlib.compress(pickle.dumps(a), 5))
                 print("handle: ", dt, 'up_limit_nextday', " ok")
 
-    def handle_date_limitup_last_40days_save(self, date):
-        ue = self.r1.hexists(date, 'up_limit')
+    def get_date_limitup_nextday(self, date):
+        df = pickle.loads(zlib.decompress(self.r1.hget(date, 'up_limit_nextday')))
+        return df
+
+    # data for trainning save in db2
+    def handle_trainning_data_save(self, date):
+        ue = self.r1.hexists(date, 'up_limit_nextday')
         if ue == 1:
-            print(date, "up_limit", "exists")
-            pass
+            d = self.get_date_limitup_nextday(date)
+            df_tscode = d['ts_code']
+
+            ds_date = self.get_trade_cal_list()
+            # ds_date = ds_date[ds_date < date]
+            ds_date = ds_date[ds_date <= date]
+            ds_date = ds_date.sort_values(ascending=False)
+            ds_date = ds_date.reset_index(drop=True)
+            # print(ds_date, type(ds_date))
+
+            for code in df_tscode:
+                ret = self.r2.hexists(date, code)
+                if ret == 0:
+                    for dt in ds_date:
+                        # data = pd.DataFrame()
+                        pass
+                # print(code)
+        else:
+            print(date, "up_limit_nextday", "not exists")
 
 
 if __name__ == '__main__':
@@ -211,7 +244,8 @@ if __name__ == '__main__':
             A.check_all_download_data()
         # download index_daily top stk daily
         elif sys.argv[1] == 'd1':
-            A.get_all_data_save()
+            A.download_trade_cal_list()
+            A.downlaod_all_data()
         # download other
         elif sys.argv[1] == 'd2':
             A.get_all_data2_save()
@@ -219,11 +253,12 @@ if __name__ == '__main__':
             A.handle_all_date_limitup_save()
             A.handle_all_date_limitup_nextday_save()
     else:
-        # d = A.get_trade_cal_list("20150101")
-        # print(d)
+        # d = A.get_trade_cal_list()
         # A.handle_date_limitup_save('20140103')
-        # A.handle_date_limitup_last_40days_save('20140103')
-        A.handle_all_date_limitup_nextday_save()
+        # A.download_trade_cal_list()
+        A.handle_trainning_data_save('20140609')
+        # A.handle_trainning_data_save('20190911')
+        # A.handle_trainning_data_save('20190912')
 
     print("Time taken:", datetime.datetime.now() - startTime)
 
