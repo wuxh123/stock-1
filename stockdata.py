@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-14 16:14:18
+#  Last Modified:  2019-09-15 23:53:52
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -52,12 +52,12 @@ class stockdata:
 
     def download_trade_cal_list(self):
         todaydate = self.get_today_date()
-        df = self.pro.query('trade_cal', start_date='20140101', end_date=todaydate)
+        df = self.pro.query('trade_cal', start_date='20130101', end_date=todaydate)
         df = df[df.is_open == 1]
         df = df['cal_date']
         df = df.reset_index(drop=True)
         self.r0.set('trade_cal', zlib.compress(pickle.dumps(df), 5))
-        print("downloading: ", 'trade_cal ok')
+        print("save: ", 'trade_cal ok')
         return df
 
     #                                          date name
@@ -82,9 +82,9 @@ class stockdata:
             time.sleep(0.6)
             if data.empty is False:
                 self.r0.hset(date, code, zlib.compress(pickle.dumps(data), 5))
-                print("downloading: ", date, code, " ok")
+                print("save: ", date, code, " ok")
             else:
-                print("downloading: ", date, code, " error")
+                print("save: ", date, code, " error")
 
     def download_index_daily_all(self, date):
         self.download_index_daily('000001.SH', date)
@@ -100,10 +100,10 @@ class stockdata:
     def download_stk_limit(self, date):
         self.check_exists_and_save(self.r0, self.pro.stk_limit, date, 'stk_limit')
 
-    def downlaod_daily(self, date):
+    def download_daily(self, date):
         self.check_exists_and_save(self.r0, self.pro.daily, date, 'daily')
 
-    def get_hk_hold_save(self, date):
+    def download_hk_hold(self, date):
         b = self.check_exists_and_save(self.r0, self.pro.hk_hold, date, 'hk_hold')
         if b:
             time.sleep(41)
@@ -113,7 +113,7 @@ class stockdata:
         if b:
             time.sleep(0.8)
 
-    def get_stk_holdertrade_save(self, date):
+    def download_stk_holdertrade(self, date):
         self.check_exists_and_save(self.r0, self.pro.stk_holdertrade, date, 'stk_holdertrade')
 
     def test(self, date):
@@ -136,7 +136,7 @@ class stockdata:
     # 下载时间短的
     def download_all_data(self):
         ds_date = self.get_trade_cal_list()
-        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
+        print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
             self.download_index_daily_all(d)
             self.download_top_list(d)
@@ -148,10 +148,10 @@ class stockdata:
     # 时间长的单独下载
     def get_all_data2_save(self):
         ds_date = self.get_trade_cal_list()
-        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
+        print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
-            self.get_hk_hold_save(d)
-            # self.get_stk_holdertrade_save(d)
+            self.download_hk_hold(d)
+            # self.download_stk_holdertrade(d)
 
     # ********************************************************************
     # 处理数据 从数据库0 读取数据 处理好后 存到数据库1
@@ -210,29 +210,51 @@ class stockdata:
         df = pickle.loads(zlib.decompress(self.r1.hget(date, 'up_limit_nextday')))
         return df
 
+    # 从 数据库0 查询 获取某天某代码
+    def get_date_stock_num(self, date, code):
+        ret = self.r0.hexists(date, 'daily')
+        if ret == 0:
+            return None
+        df = pickle.loads(zlib.decompress(self.r0.hget(date, 'daily')))
+        df = df[df.ts_code == code]
+        if df.empty is False:
+            return df
+        return None
+
+    # 获取截止某天的某代码前40天数据
+    def get_date_stock_num_last_40days(self, date, code):
+        ds_date = self.get_trade_cal_list()
+        ds_date = ds_date[ds_date <= date]
+        ds_date = ds_date.sort_values(ascending=False)
+        ds_date = ds_date.reset_index(drop=True)
+
+        data = pd.DataFrame()
+        for d in ds_date:
+            d = self.get_date_stock_num(d, code)
+            if d is not None:
+                data = data.append(d)
+                if data.shape[0] == 40:
+                    data = data.sort_values(by='trade_date')
+                    data = data.reset_index(drop=True)
+                    return data
+        return None
+
     # data for trainning save in db2
     def handle_trainning_data_save(self, date):
-        ue = self.r1.hexists(date, 'up_limit_nextday')
-        if ue == 1:
+        if self.r1.hexists(date, 'up_limit_nextday') == 1:
             d = self.get_date_limitup_nextday(date)
             df_tscode = d['ts_code']
 
-            ds_date = self.get_trade_cal_list()
-            # ds_date = ds_date[ds_date < date]
-            ds_date = ds_date[ds_date <= date]
-            ds_date = ds_date.sort_values(ascending=False)
-            ds_date = ds_date.reset_index(drop=True)
-            # print(ds_date, type(ds_date))
-
             for code in df_tscode:
-                ret = self.r2.hexists(date, code)
-                if ret == 0:
-                    for dt in ds_date:
-                        # data = pd.DataFrame()
-                        pass
-                # print(code)
-        else:
-            print(date, "up_limit_nextday", "not exists")
+                data = self.get_date_stock_num_last_40days(date, code)
+                if data is not None:
+                    dnc = d[d.ts_code == code]
+                    data = data.append(dnc)
+                    if self.r2.hexists(date, code) == 0:
+                        self.r2.hset(date, code, zlib.compress(pickle.dumps(data), 5))
+                        print("handle_trainning_data_save: ", date, code)
+                else:
+                    print("handle_trainning_data_save: ", date, code, "error")
 
 
 if __name__ == '__main__':
@@ -245,7 +267,7 @@ if __name__ == '__main__':
         # download index_daily top stk daily
         elif sys.argv[1] == 'd1':
             A.download_trade_cal_list()
-            A.downlaod_all_data()
+            A.download_all_data()
         # download other
         elif sys.argv[1] == 'd2':
             A.get_all_data2_save()
@@ -256,9 +278,9 @@ if __name__ == '__main__':
         # d = A.get_trade_cal_list()
         # A.handle_date_limitup_save('20140103')
         # A.download_trade_cal_list()
-        A.handle_trainning_data_save('20140609')
-        # A.handle_trainning_data_save('20190911')
-        # A.handle_trainning_data_save('20190912')
+        A.handle_trainning_data_save('20150105')
+        # A.get_date_stock_num('20190911', '600818.SH')
+        # A.get_date_stock_num_last_40days('20190911', '600818.SH')
 
     print("Time taken:", datetime.datetime.now() - startTime)
 
