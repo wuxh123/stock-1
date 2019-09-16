@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-16 11:31:13
+#  Last Modified:  2019-09-16 14:59:14
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -43,11 +43,13 @@ class stockdata:
     def get_today_date(self):
         return datetime.datetime.now().strftime("%Y%m%d")
 
-    def get_stock_basics(self):
-        return self.pro.get_stock_basics()
+    def download_stock_basic(self):
+        df = self.pro.stock_basic(list_status="L")
+        df = df.reset_index(drop=True)
+        self.r0.set('stock_basic', zlib.compress(pickle.dumps(df), 5))
 
-    def get_trade_cal_list(self):
-        df = pickle.loads(zlib.decompress(self.r0.get('trade_cal')))
+    def get_stock_basics(self):
+        df = pickle.loads(zlib.decompress(self.r0.get('stock_basic')))
         return df
 
     def download_trade_cal_list(self):
@@ -58,6 +60,10 @@ class stockdata:
         df = df.reset_index(drop=True)
         self.r0.set('trade_cal', zlib.compress(pickle.dumps(df), 5))
         print("save: ", 'trade_cal ok')
+        return df
+
+    def get_trade_cal_list(self):
+        df = pickle.loads(zlib.decompress(self.r0.get('trade_cal')))
         return df
 
     #                                          date name
@@ -91,17 +97,42 @@ class stockdata:
         self.download_index_daily('399001.SZ', date)
         self.download_index_daily('399006.SZ', date)
 
+    def get_index_daily_all(self, date):
+        d1 = pickle.loads(zlib.decompress(self.r0.hget(date, '000001.SH')))
+        d2 = pickle.loads(zlib.decompress(self.r0.hget(date, '399001.SZ')))
+        d3 = pickle.loads(zlib.decompress(self.r0.hget(date, '399006.SZ')))
+        d1 = d1.append([d2, d3])
+        d1 = d1.reset_index(drop=True)
+        print(d1)
+        return d1
+
     def download_top_list(self, date):
         self.check_exists_and_save(self.r0, self.pro.top_list, date, 'top_list')
+
+    def get_top_list(self, date):
+        df = pickle.loads(zlib.decompress(self.r0.hget(date, 'top_list')))
+        return df
 
     def download_top_inst(self, date):
         self.check_exists_and_save(self.r0, self.pro.top_inst, date, 'top_inst')
 
+    def get_top_inst(self, date):
+        df = pickle.loads(zlib.decompress(self.r0.hget(date, 'top_inst')))
+        return df
+
     def download_stk_limit(self, date):
         self.check_exists_and_save(self.r0, self.pro.stk_limit, date, 'stk_limit')
 
+    def get_stk_limit(self, date):
+        df = pickle.loads(zlib.decompress(self.r0.hget(date, 'stk_limit')))
+        return df
+
     def download_daily(self, date):
         self.check_exists_and_save(self.r0, self.pro.daily, date, 'daily')
+
+    def get_daily(self, date):
+        df = pickle.loads(zlib.decompress(self.r0.hget(date, 'daily')))
+        return df
 
     def download_hk_hold(self, date):
         b = self.check_exists_and_save(self.r0, self.pro.hk_hold, date, 'hk_hold')
@@ -112,6 +143,10 @@ class stockdata:
         b = self.check_exists_and_save(self.r0, self.pro.block_trade, date, 'block_trade')
         if b:
             time.sleep(0.8)
+
+    def get_block_trade(self, date):
+        df = pickle.loads(zlib.decompress(self.r0.hget(date, 'block_trade')))
+        return df
 
     def download_stk_holdertrade(self, date):
         self.check_exists_and_save(self.r0, self.pro.stk_holdertrade, date, 'stk_holdertrade')
@@ -160,9 +195,11 @@ class stockdata:
         dr = self.r0.hexists(date, 'daily')
         ds = self.r0.hexists(date, 'stk_limit')
         if ue == 0 and dr == 1 and ds == 1:
-            dfd = pickle.loads(zlib.decompress(self.r0.hget(date, 'daily')))
+            # dfd = pickle.loads(zlib.decompress(self.r0.hget(date, 'daily')))
+            dfd = self.get_daily()
             dfd = dfd[['ts_code', 'close', 'pct_chg']]
-            dfs = pickle.loads(zlib.decompress(self.r0.hget(date, 'stk_limit')))
+            # dfs = pickle.loads(zlib.decompress(self.r0.hget(date, 'stk_limit')))
+            dfs = self.get_stk_limit()
             dfs = dfs[['ts_code', 'up_limit']]
             df = pd.merge(dfd, dfs, on='ts_code')
             df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
@@ -172,6 +209,10 @@ class stockdata:
             if df.empty is False:
                 self.r1.hset(date, 'up_limit', zlib.compress(pickle.dumps(df), 5))
                 print("handle: ", date, 'up_limit', " ok")
+
+    def get_date_limitup(self, date):
+        df = pickle.loads(zlib.decompress(self.r1.hget(date, 'up_limit')))
+        return df
 
     # 处理数据
     def handle_all_date_limitup_save(self):
@@ -188,16 +229,17 @@ class stockdata:
             dt = d[i]
             if self.r1.hexists(dt, 'up_limit_nextday') == 1:
                 return
-                # pass
 
             if self.r1.hexists(dt, 'up_limit') == 0:
                 return
-            dtdf = pickle.loads(zlib.decompress(self.r1.hget(dt, 'up_limit')))
+            # dtdf = pickle.loads(zlib.decompress(self.r1.hget(dt, 'up_limit')))
+            dtdf = self.get_date_limitup()
 
             nxdt = ds_date[i + 1]
             if self.r0.hexists(nxdt, 'daily') == 0:
                 return
-            nxdtdf = pickle.loads(zlib.decompress(self.r0.hget(nxdt, 'daily')))
+            # nxdtdf = pickle.loads(zlib.decompress(self.r0.hget(nxdt, 'daily')))
+            nxdtdf = self.get_daily()
 
             a = nxdtdf[nxdtdf.ts_code.isin(dtdf)]
             a = a.sort_values("pct_chg", ascending=False)
@@ -215,7 +257,8 @@ class stockdata:
         ret = self.r0.hexists(date, 'daily')
         if ret == 0:
             return None
-        df = pickle.loads(zlib.decompress(self.r0.hget(date, 'daily')))
+        # df = pickle.loads(zlib.decompress(self.r0.hget(date, 'daily')))
+        df = self.get_daily()
         df = df[df.ts_code == code]
         if df.empty is False:
             return df
@@ -223,16 +266,29 @@ class stockdata:
 
     # 获取截止某天的某代码前40天数据
     def get_date_stock_num_last_40days(self, date, code):
+        dsb = self.get_stock_basics()
+        # 如果现在已经退市则抛弃
+        dsb = dsb[dsb.ts_code == code]
+        if dsb.empty is True:
+            return None
+
+        dsb = dsb['list_date']
+        ld = dsb.iat[0]
+
         ds_date = self.get_trade_cal_list()
-        ds_date = ds_date[ds_date <= date]
+        ds_date = ds_date[(ds_date <= date) & (ds_date >= ld)]
         ds_date = ds_date.sort_values(ascending=False)
         ds_date = ds_date.reset_index(drop=True)
 
+        if ds_date.shape[0] < 40:
+            print("new stock discard :", date, code, ds_date.shape[0])
+            return None
+
         data = pd.DataFrame()
         for d in ds_date:
-            d = self.get_date_stock_num(d, code)
-            if d is not None:
-                data = data.append(d)
+            dc = self.get_date_stock_num(d, code)
+            if dc is not None:
+                data = data.append(dc)
                 if data.shape[0] == 40:
                     data = data.sort_values(by='trade_date')
                     data = data.reset_index(drop=True)
@@ -258,11 +314,11 @@ class stockdata:
                     else:
                         derror = pd.DataFrame()
                         self.r2.hset(date, code, zlib.compress(pickle.dumps(derror), 5))
-                        print("handle_trainning_data_save: ", date, code, "error and mark")
+                        # print("handle_trainning_data_save: ", date, code, "error and mark")
 
     def handle_trainning_data_all_save(self):
         cal = self.get_trade_cal_list()
-        cal = cal[cal >= '20150101']
+        cal = cal[cal >= '20160101']
         cal = cal.reset_index(drop=True)
         for d in cal:
             self.handle_trainning_data_save(d)
@@ -289,11 +345,16 @@ if __name__ == '__main__':
     else:
         # d = A.get_trade_cal_list()
         # A.handle_date_limitup_save('20140103')
+        A.handle_date_limitup_save('20160105')
+        A.get_date_limitup('20160105')
         # A.download_trade_cal_list()
-        # A.handle_trainning_data_save('20150105')
+        # A.handle_trainning_data_save('20160105')
         # A.handle_trainning_data_all_save()
         # A.get_date_stock_num('20190911', '600818.SH')
-        A.get_date_stock_num_last_40days('20190911', '600818.SH')
+        # d = A.get_date_stock_num_last_40days('20190911', '600818.SH')
+        # A.get_index_daily_all('20160105')
+        # d = A.get_stock_basics()
+        # print(d)
 
     print("Time taken:", datetime.datetime.now() - startTime)
 
@@ -306,29 +367,4 @@ if __name__ == '__main__':
 # redis.hset(key_name, field, zlib.compress(pickle.dumps(df), 5))
 # df = pickle.loads(zlib.decompress(redis.hget(key_name, field)))
 #
-# nxdtdf = nxdtdf.drop(index=(nxdtdf.loc[nxdtdf.ts_code == '002232.SZ'].index))
-'''
-def get_stock_number_start_end_date(self, code, st, end):
-    return self.pro.daily(ts_code=code, start_date=st, end_date=end)
-
-def get_stock_number_date_last_ndays(self, code, date, ndays):
-    end = datetime.datetime.now()
-    st = end - datetime.timedelta(days=ndays * 2)
-    st = st.strftime("%Y%m%d")
-    end = end.strftime("%Y%m%d")
-    df = self.get_stock_number_start_end_date(code, st, end)
-    if df.shape[0] <= ndays:
-        return df
-    return df[0:ndays]
-
-def get_one_day_data_save(self, date):
-    df_tscode = self.get_date_limitup(date)
-    for i in df_tscode.index:
-        c = df_tscode.loc[i]
-        re = self.r.hexists(date, c)
-        if (re == 0):
-            print("downloading: ", date, c)
-            df = self.get_stock_number_date_last_ndays(c, date, 40)
-            self.r.hset(date, c, zlib.compress(pickle.dumps(df), 5))
-            time.sleep(0.15)
-'''
+# n= n.drop(index=(n.loc[n.ts_code == '002232.SZ'].index))
