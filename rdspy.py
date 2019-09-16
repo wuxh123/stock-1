@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-10 15:42:58
-#  Last Modified:  2019-09-16 23:08:55
+#  Last Modified:  2019-09-17 00:19:31
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -34,8 +34,8 @@ r2 = r.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
 # df1 = pickle.loads(zlib.decompress(r1.hget("20160525", "up_limit")))
 # df1 = pickle.loads(zlib.decompress(r1.hget("20190911", "up_limit_nextday")))
 # df1 = pickle.loads(zlib.decompress(r1.hget("20150105", "up_limit_nextday")))
-df1 = pickle.loads(zlib.decompress(r1.hget("20150105", "up_limit")))
-# df1 = pickle.loads(zlib.decompress(r2.hget("20150105", "600740.SH")))
+# df1 = pickle.loads(zlib.decompress(r1.hget("20150105", "up_limit")))
+df1 = pickle.loads(zlib.decompress(r2.hget("20150526", "300126.SZ")))
 # df1 = pickle.loads(zlib.decompress(r2.hget("20150107", "300319.SZ")))
 # df1 = pickle.loads(zlib.decompress(rr.get("stock_basic")))
 print(df1, type(df1))

@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-16 23:23:39
+#  Last Modified:  2019-09-17 00:17:02
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -320,8 +320,8 @@ class stockdata:
                         self.r2.hset(date, code, zlib.compress(pickle.dumps(data), 5))
                         print("handle_trainning_data_save: ", date, code)
                     else:
-                        derror = pd.DataFrame()
-                        self.r2.hset(date, code, zlib.compress(pickle.dumps(derror), 5))
+                        # derror = pd.DataFrame()
+                        # self.r2.hset(date, code, zlib.compress(pickle.dumps(derror), 5))
                         print("handle_trainning_data_save: ", date, code, "error and mark")
 
     def handle_trainning_data_all_save(self):
@@ -348,7 +348,7 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'h':
             A.handle_all_date_limitup_save()
             A.handle_all_date_limitup_nextday_save()
-            # A.handle_trainning_data_all_save()
+            A.handle_trainning_data_all_save()
     else:
         pass
         # d = A.get_trade_cal_list()
@@ -357,14 +357,14 @@ if __name__ == '__main__':
         # d = A.get_stock_list_date_n('600818.SH', '20160105')
         # A.download_trade_cal_list()
         # A.handle_trainning_data_save('20160105')
-        # A.handle_trainning_data_all_save()
+        A.handle_trainning_data_all_save()
         # A.get_date_stock_num('20190911', '600818.SH')
         # d = A.get_date_stock_num_last_40days('20160111', '603778.SH')
         # A.handle_date_limitup_save('20150105')
         # d = A.get_date_limitup('20160111')
         # d = A.get_stock_list_date_n('603778.SH', '20160111')
-        d = A.get_stock_list_date_n('603636.SH', '20150105')
-        print(d)
+        # d = A.get_stock_list_date_n('603636.SH', '20150105')
+        # print(d)
         # A.get_index_daily_all('20160105')
         # d = A.get_stock_basics()
     print("Time taken:", datetime.datetime.now() - startTime)
