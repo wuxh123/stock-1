@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-16 16:38:21
+#  Last Modified:  2019-09-16 23:23:39
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -47,6 +47,7 @@ class stockdata:
         df = self.pro.stock_basic(list_status="L")
         df = df.reset_index(drop=True)
         self.r0.set('stock_basic', zlib.compress(pickle.dumps(df), 5))
+        print("save: ", 'stock_basic ok')
 
     def get_stock_basics(self):
         df = pickle.loads(zlib.decompress(self.r0.get('stock_basic')))
@@ -62,9 +63,11 @@ class stockdata:
         print("save: ", 'trade_cal ok')
         return df
 
-    def get_trade_cal_list(self):
-        df = pickle.loads(zlib.decompress(self.r0.get('trade_cal')))
-        return df
+    def get_trade_cal_list(self, st_date='20130101'):
+        cal = pickle.loads(zlib.decompress(self.r0.get('trade_cal')))
+        cal = cal[cal >= st_date]
+        cal = cal.reset_index(drop=True)
+        return cal
 
     # 获取某代码到某天上市天数
     def get_stock_list_date_n(self, code, date):
@@ -74,8 +77,9 @@ class stockdata:
             return 0
         da = da['list_date'].iat[0]
         cal = self.get_trade_cal_list()
-        cal = cal[cal >= da]
+        cal = cal[(cal >= da) & (cal <= date)]
         n = cal.shape[0]
+        # print(da, date, n)
         return n
 
     #                                          date name
@@ -215,9 +219,11 @@ class stockdata:
             for i in range(df.shape[0]):
                 if self.get_stock_list_date_n(df.iat[i, 0], date) < 40:
                     df.iat[i, 1] = 0.0
+                    print("drop new listed: ", date, df.iat[i, 0])
 
             df = df[df.close > 0.1]
             df = df['ts_code']
+            df = df.reset_index(drop=True)
 
             if df.empty is False:
                 self.r1.hset(date, 'up_limit', zlib.compress(pickle.dumps(df), 5))
@@ -229,14 +235,14 @@ class stockdata:
 
     # 处理数据
     def handle_all_date_limitup_save(self):
-        ds_date = self.get_trade_cal_list()
+        ds_date = self.get_trade_cal_list('20150101')
         print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
             self.handle_date_limitup_save(d)
 
     # 选定标的次日表现存贮，用于修正学习方向。
     def handle_all_date_limitup_nextday_save(self):
-        ds_date = self.get_trade_cal_list()
+        ds_date = self.get_trade_cal_list('20150101')
         d = ds_date[:-1]
         for i in range(len(d)):
             dt = d[i]
@@ -245,13 +251,11 @@ class stockdata:
 
             if self.r1.hexists(dt, 'up_limit') == 0:
                 return
-            # dtdf = pickle.loads(zlib.decompress(self.r1.hget(dt, 'up_limit')))
             dtdf = self.get_date_limitup(dt)
 
             nxdt = ds_date[i + 1]
             if self.r0.hexists(nxdt, 'daily') == 0:
                 return
-            # nxdtdf = pickle.loads(zlib.decompress(self.r0.hget(nxdt, 'daily')))
             nxdtdf = self.get_daily(nxdt)
 
             a = nxdtdf[nxdtdf.ts_code.isin(dtdf)]
@@ -270,7 +274,6 @@ class stockdata:
         ret = self.r0.hexists(date, 'daily')
         if ret == 0:
             return None
-        # df = pickle.loads(zlib.decompress(self.r0.hget(date, 'daily')))
         df = self.get_daily(date)
         df = df[df.ts_code == code]
         if df.empty is False:
@@ -280,11 +283,7 @@ class stockdata:
     # 获取截止某天的某代码前40天数据
     def get_date_stock_num_last_40days(self, date, code):
         dsb = self.get_stock_basics()
-        # 如果现在已经退市则抛弃
         dsb = dsb[dsb.ts_code == code]
-        if dsb.empty is True:
-            return None
-
         dsb = dsb['list_date']
         ld = dsb.iat[0]
 
@@ -292,10 +291,6 @@ class stockdata:
         ds_date = ds_date[(ds_date <= date) & (ds_date >= ld)]
         ds_date = ds_date.sort_values(ascending=False)
         ds_date = ds_date.reset_index(drop=True)
-
-        if ds_date.shape[0] < 40:
-            print("new stock discard :", date, code, ds_date.shape[0])
-            return None
 
         data = pd.DataFrame()
         for d in ds_date:
@@ -327,12 +322,10 @@ class stockdata:
                     else:
                         derror = pd.DataFrame()
                         self.r2.hset(date, code, zlib.compress(pickle.dumps(derror), 5))
-                        # print("handle_trainning_data_save: ", date, code, "error and mark")
+                        print("handle_trainning_data_save: ", date, code, "error and mark")
 
     def handle_trainning_data_all_save(self):
-        cal = self.get_trade_cal_list()
-        cal = cal[cal >= '20160101']
-        cal = cal.reset_index(drop=True)
+        cal = self.get_trade_cal_list('20150101')
         for d in cal:
             self.handle_trainning_data_save(d)
 
@@ -346,6 +339,7 @@ if __name__ == '__main__':
             A.check_all_download_data()
         # download index_daily top stk daily
         elif sys.argv[1] == 'd1':
+            A.download_stock_basic()
             A.download_trade_cal_list()
             A.download_all_data()
         # download other
@@ -354,22 +348,25 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'h':
             A.handle_all_date_limitup_save()
             A.handle_all_date_limitup_nextday_save()
-            A.handle_trainning_data_all_save()
+            # A.handle_trainning_data_all_save()
     else:
+        pass
         # d = A.get_trade_cal_list()
-        # A.handle_date_limitup_save('20140103')
-        A.handle_date_limitup_save('20160105')
+        # A.handle_all_date_limitup_nextday_save()
+        # A.handle_date_limitup_save('20160105')
         # d = A.get_stock_list_date_n('600818.SH', '20160105')
-        # print(d)
-        # A.get_date_limitup('20160105')
         # A.download_trade_cal_list()
         # A.handle_trainning_data_save('20160105')
         # A.handle_trainning_data_all_save()
         # A.get_date_stock_num('20190911', '600818.SH')
-        # d = A.get_date_stock_num_last_40days('20190911', '600818.SH')
+        # d = A.get_date_stock_num_last_40days('20160111', '603778.SH')
+        # A.handle_date_limitup_save('20150105')
+        # d = A.get_date_limitup('20160111')
+        # d = A.get_stock_list_date_n('603778.SH', '20160111')
+        d = A.get_stock_list_date_n('603636.SH', '20150105')
+        print(d)
         # A.get_index_daily_all('20160105')
         # d = A.get_stock_basics()
-        # print(d)
     print("Time taken:", datetime.datetime.now() - startTime)
 
 

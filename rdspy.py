@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-10 15:42:58
-#  Last Modified:  2019-09-16 14:02:28
+#  Last Modified:  2019-09-16 23:08:55
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -34,9 +34,10 @@ r2 = r.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
 # df1 = pickle.loads(zlib.decompress(r1.hget("20160525", "up_limit")))
 # df1 = pickle.loads(zlib.decompress(r1.hget("20190911", "up_limit_nextday")))
 # df1 = pickle.loads(zlib.decompress(r1.hget("20150105", "up_limit_nextday")))
+df1 = pickle.loads(zlib.decompress(r1.hget("20150105", "up_limit")))
 # df1 = pickle.loads(zlib.decompress(r2.hget("20150105", "600740.SH")))
 # df1 = pickle.loads(zlib.decompress(r2.hget("20150107", "300319.SZ")))
-df1 = pickle.loads(zlib.decompress(rr.get("stock_basic")))
+# df1 = pickle.loads(zlib.decompress(rr.get("stock_basic")))
 print(df1, type(df1))
 # df2 = pickle.loads(zlib.decompress(rr.hget("20150107", "top_list")))
 # df2 = df2[df2.ts_code == '300319.SZ']
