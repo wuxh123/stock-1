@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-15 23:53:52
+#  Last Modified:  2019-09-16 11:31:13
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -246,15 +246,26 @@ class stockdata:
             df_tscode = d['ts_code']
 
             for code in df_tscode:
-                data = self.get_date_stock_num_last_40days(date, code)
-                if data is not None:
-                    dnc = d[d.ts_code == code]
-                    data = data.append(dnc)
-                    if self.r2.hexists(date, code) == 0:
+                if self.r2.hexists(date, code) == 0:
+                    data = self.get_date_stock_num_last_40days(date, code)
+                    if data is not None:
+                        dnc = d[d.ts_code == code]
+                        # append up_limit next day for correct
+                        data = data.append(dnc)
+                        data = data.reset_index(drop=True)
                         self.r2.hset(date, code, zlib.compress(pickle.dumps(data), 5))
                         print("handle_trainning_data_save: ", date, code)
-                else:
-                    print("handle_trainning_data_save: ", date, code, "error")
+                    else:
+                        derror = pd.DataFrame()
+                        self.r2.hset(date, code, zlib.compress(pickle.dumps(derror), 5))
+                        print("handle_trainning_data_save: ", date, code, "error and mark")
+
+    def handle_trainning_data_all_save(self):
+        cal = self.get_trade_cal_list()
+        cal = cal[cal >= '20150101']
+        cal = cal.reset_index(drop=True)
+        for d in cal:
+            self.handle_trainning_data_save(d)
 
 
 if __name__ == '__main__':
@@ -274,13 +285,15 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'h':
             A.handle_all_date_limitup_save()
             A.handle_all_date_limitup_nextday_save()
+            A.handle_trainning_data_all_save()
     else:
         # d = A.get_trade_cal_list()
         # A.handle_date_limitup_save('20140103')
         # A.download_trade_cal_list()
-        A.handle_trainning_data_save('20150105')
+        # A.handle_trainning_data_save('20150105')
+        # A.handle_trainning_data_all_save()
         # A.get_date_stock_num('20190911', '600818.SH')
-        # A.get_date_stock_num_last_40days('20190911', '600818.SH')
+        A.get_date_stock_num_last_40days('20190911', '600818.SH')
 
     print("Time taken:", datetime.datetime.now() - startTime)
 
