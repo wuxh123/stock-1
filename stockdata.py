@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-17 13:21:13
+#  Last Modified:  2019-09-17 16:14:07
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -74,12 +74,13 @@ class stockdata:
         da = self.get_stock_basics()
         da = da[da.ts_code == code]
         if da.empty is True:
-            return 0
+            return pd.DataFrame()
         da = da['list_date'].iat[0]
         df = self.pro.daily(ts_code=code, start_date=da, end_date=date)
         df = df.head(41)
         df = df.sort_values("trade_date", ascending=True)
         df = df.reset_index(drop=True)
+        time.sleep(0.1)
         return df
 
     #                                          date name
@@ -275,12 +276,13 @@ if __name__ == '__main__':
         # A.download_trade_cal_list()
         # A.handle_trainning_data_all_save()
         # A.get_date_stock_num('20190911', '600818.SH')
-        A.handle_date_trainning_data_save('20160917')
+        # A.handle_date_trainning_data_save('20170103')
         # print(d)
-        # d = A.get_stock_list_date_n('300425.SZ', '20150615')
-        # d = A.get_stock_list_date_n('002120.SZ', '20160919')
-        print(d)
-        # A.get_index_daily_all('20160105')
+        # d = A.get_stock_list_date_n('300425.SZ', '20170615')
+        # d = A.get_stock_list_date_n('002120.SZ', '20170919')
+        d = A.get_stock_list_date_n('600680.SH', '20170104')
+        print(d, d.shape[0])
+        # A.get_index_daily_all('20170105')
         # d = A.get_stock_basics()
     print("Time taken:", datetime.datetime.now() - startTime)
 
