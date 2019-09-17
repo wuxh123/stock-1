@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-17 09:00:19
+#  Last Modified:  2019-09-17 13:21:13
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -33,7 +33,7 @@ class stockdata:
         # 原始数据存数据库0
         self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
         # self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
-        # 加工后的数据存数据库1
+        # 数据处理标志存数据库1
         self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
         # self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
         # 训练用数据存数据库2
@@ -69,18 +69,18 @@ class stockdata:
         cal = cal.reset_index(drop=True)
         return cal
 
-    # 获取某代码到某天上市天数
+    # 获取某代码到某天上市数据
     def get_stock_list_date_n(self, code, date):
         da = self.get_stock_basics()
         da = da[da.ts_code == code]
         if da.empty is True:
             return 0
         da = da['list_date'].iat[0]
-        cal = self.get_trade_cal_list()
-        cal = cal[(cal >= da) & (cal <= date)]
-        n = cal.shape[0]
-        # print(da, date, n)
-        return n
+        df = self.pro.daily(ts_code=code, start_date=da, end_date=date)
+        df = df.head(41)
+        df = df.sort_values("trade_date", ascending=True)
+        df = df.reset_index(drop=True)
+        return df
 
     #                                          date name
     def check_exists_and_save(self, rds, func, key, field):
@@ -201,74 +201,38 @@ class stockdata:
             # self.download_stk_holdertrade(d)
 
     # ********************************************************************
-    # 处理数据 从数据库0 读取数据 处理好后 存到数据库1
-    def handle_date_limitup_save(self, date):
-        ue = self.r1.hexists(date, 'up_limit')
-        dr = self.r0.hexists(date, 'daily')
-        ds = self.r0.hexists(date, 'stk_limit')
-        if ue == 0 and dr == 1 and ds == 1:
-            dfd = self.get_daily(date)
-            # dfd = dfd[['ts_code', 'close', 'pct_chg']]
-            dfs = self.get_stk_limit(date)
-            # dfs = dfs[['ts_code', 'up_limit']]
+    # 处理数据 从数据库0 读取数据 处理好后 存到数据库2 ,db1 保存标志
+    def handle_date_trainning_data_save(self, date):
+        if self.r1.hexists(date, "train_data"):
+            return
+
+        ds_date = self.get_trade_cal_list(date)
+        if ds_date.shape[0] < 2:
+            print("skip: ", date)
+            return
+
+        next_day = ds_date[1]
+        dr = self.r0.hexists(next_day, 'daily')
+
+        if dr is True:
+            dfd = self.get_daily(next_day)
+            dfs = self.get_stk_limit(next_day)
             df = pd.merge(dfd, dfs, on='ts_code')
             df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
-            df = df.reset_index(drop=True)
-            df = df[['ts_code', 'close']]
-
-            for i in range(df.shape[0]):
-                if self.get_stock_list_date_n(df.iat[i, 0], date) < 40:
-                    df.iat[i, 1] = 0.0
-                    print("drop new listed: ", date, df.iat[i, 0])
-
-            df = df[df.close > 0.1]
             df = df['ts_code']
             df = df.reset_index(drop=True)
 
-            if df.empty is False:
-                self.r1.hset(date, 'up_limit', zlib.compress(pickle.dumps(df), 5))
-                print("handle: ", date, 'up_limit', " ok")
-
-    def get_date_limitup(self, date):
-        df = pickle.loads(zlib.decompress(self.r1.hget(date, 'up_limit')))
-        return df
+            for i in range(df.shape[0]):
+                c = df.iat[i]
+                ret = self.r2.hexists(date, c)
+                if ret is False:
+                    dnf = self.get_stock_list_date_n(c, next_day)
+                    if dnf.shape[0] == 41:
+                        self.r2.hset(date, c, zlib.compress(pickle.dumps(dnf), 5))
+                        print("handle_uplimit_last_40days_data_save: ", date, c)
+        self.r1.hset(date, "train_data", "ok")
 
     # 处理数据
-    def handle_all_date_limitup_save(self):
-        ds_date = self.get_trade_cal_list('20150101')
-        print(" start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
-        for d in ds_date:
-            self.handle_date_limitup_save(d)
-
-    # 选定标的次日表现存贮，用于修正学习方向。
-    def handle_all_date_limitup_nextday_save(self):
-        ds_date = self.get_trade_cal_list('20150101')
-        d = ds_date[:-1]
-        for i in range(len(d)):
-            dt = d[i]
-            if self.r1.hexists(dt, 'up_limit_nextday') == 1:
-                return
-
-            if self.r1.hexists(dt, 'up_limit') == 0:
-                return
-            dtdf = self.get_date_limitup(dt)
-
-            nxdt = ds_date[i + 1]
-            if self.r0.hexists(nxdt, 'daily') == 0:
-                return
-            nxdtdf = self.get_daily(nxdt)
-
-            a = nxdtdf[nxdtdf.ts_code.isin(dtdf)]
-            a = a.sort_values("pct_chg", ascending=False)
-            a = a.reset_index(drop=True)
-            if a.empty is False:
-                self.r1.hset(dt, 'up_limit_nextday', zlib.compress(pickle.dumps(a), 5))
-                print("handle: ", dt, 'up_limit_nextday', " ok")
-
-    def get_date_limitup_nextday(self, date):
-        df = pickle.loads(zlib.decompress(self.r1.hget(date, 'up_limit_nextday')))
-        return df
-
     # 从 数据库0 查询 获取某天某代码
     def get_date_stock_num(self, date, code):
         ret = self.r0.hexists(date, 'daily')
@@ -280,54 +244,11 @@ class stockdata:
             return df
         return None
 
-    # 获取截止某天的某代码前40天数据
-    def get_date_stock_num_last_40days(self, date, code):
-        dsb = self.get_stock_basics()
-        dsb = dsb[dsb.ts_code == code]
-        dsb = dsb['list_date']
-        ld = dsb.iat[0]
-
-        ds_date = self.get_trade_cal_list()
-        ds_date = ds_date[(ds_date <= date) & (ds_date >= ld)]
-        ds_date = ds_date.sort_values(ascending=False)
-        ds_date = ds_date.reset_index(drop=True)
-
-        data = pd.DataFrame()
-        for d in ds_date:
-            dc = self.get_date_stock_num(d, code)
-            if dc is not None:
-                data = data.append(dc)
-                if data.shape[0] == 40:
-                    data = data.sort_values(by='trade_date')
-                    data = data.reset_index(drop=True)
-                    return data
-        return None
-
-    # data for trainning save in db2
-    def handle_trainning_data_save(self, date):
-        if self.r1.hexists(date, 'up_limit_nextday') == 1:
-            d = self.get_date_limitup_nextday(date)
-            df_tscode = d['ts_code']
-
-            for code in df_tscode:
-                if self.r2.hexists(date, code) == 0:
-                    data = self.get_date_stock_num_last_40days(date, code)
-                    if data is not None:
-                        dnc = d[d.ts_code == code]
-                        # append up_limit next day for correct
-                        data = data.append(dnc)
-                        data = data.reset_index(drop=True)
-                        self.r2.hset(date, code, zlib.compress(pickle.dumps(data), 5))
-                        print("handle_trainning_data_save: ", date, code)
-                    else:
-                        # derror = pd.DataFrame()
-                        # self.r2.hset(date, code, zlib.compress(pickle.dumps(derror), 5))
-                        print("handle_trainning_data_save: ", date, code, "error and mark")
-
+    # data for trainning save in db1
     def handle_trainning_data_all_save(self):
-        cal = self.get_trade_cal_list('20150101')
+        cal = self.get_trade_cal_list('20170101')
         for d in cal:
-            self.handle_trainning_data_save(d)
+            self.handle_date_trainning_data_save(d)
 
 
 if __name__ == '__main__':
@@ -346,25 +267,19 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'd2':
             A.get_all_data2_save()
         elif sys.argv[1] == 'h':
-            A.handle_all_date_limitup_save()
-            A.handle_all_date_limitup_nextday_save()
             A.handle_trainning_data_all_save()
     else:
         pass
+        d = "ssss"
         # d = A.get_trade_cal_list()
-        # A.handle_all_date_limitup_nextday_save()
-        # A.handle_date_limitup_save('20160105')
-        # d = A.get_stock_list_date_n('600818.SH', '20160105')
         # A.download_trade_cal_list()
-        # A.handle_trainning_data_save('20160105')
-        A.handle_trainning_data_all_save()
+        # A.handle_trainning_data_all_save()
         # A.get_date_stock_num('20190911', '600818.SH')
-        # d = A.get_date_stock_num_last_40days('20160111', '603778.SH')
-        # A.handle_date_limitup_save('20150105')
-        # d = A.get_date_limitup('20160111')
-        # d = A.get_stock_list_date_n('603778.SH', '20160111')
-        # d = A.get_stock_list_date_n('603636.SH', '20150105')
+        A.handle_date_trainning_data_save('20160917')
         # print(d)
+        # d = A.get_stock_list_date_n('300425.SZ', '20150615')
+        # d = A.get_stock_list_date_n('002120.SZ', '20160919')
+        print(d)
         # A.get_index_daily_all('20160105')
         # d = A.get_stock_basics()
     print("Time taken:", datetime.datetime.now() - startTime)

@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-10 15:42:58
-#  Last Modified:  2019-09-17 00:19:31
+#  Last Modified:  2019-09-17 13:20:41
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -31,14 +31,12 @@ r2 = r.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
 # df1 = pickle.loads(zlib.decompress(rr.hget("20160104", "block_trade")))
 # df1 = pickle.loads(zlib.decompress(rr.hget("20160107", "block_trade")))
 # df1 = pickle.loads(zlib.decompress(rr.hget("20150123", "daily")))
-# df1 = pickle.loads(zlib.decompress(r1.hget("20160525", "up_limit")))
-# df1 = pickle.loads(zlib.decompress(r1.hget("20190911", "up_limit_nextday")))
-# df1 = pickle.loads(zlib.decompress(r1.hget("20150105", "up_limit_nextday")))
-# df1 = pickle.loads(zlib.decompress(r1.hget("20150105", "up_limit")))
-df1 = pickle.loads(zlib.decompress(r2.hget("20150526", "300126.SZ")))
+df1 = pickle.loads(zlib.decompress(r2.hget("20160917", "002628.SZ")))
+# df1 = pickle.loads(zlib.decompress(r2.hget("20150615", "300425.SZ")))
 # df1 = pickle.loads(zlib.decompress(r2.hget("20150107", "300319.SZ")))
 # df1 = pickle.loads(zlib.decompress(rr.get("stock_basic")))
-print(df1, type(df1))
+print(df1)
+print(type(df1))
 # df2 = pickle.loads(zlib.decompress(rr.hget("20150107", "top_list")))
 # df2 = df2[df2.ts_code == '300319.SZ']
 # df2 = df2.drop(['ts_code', 'trade_date', 'name', 'close', 'pct_change', 'reason'], axis=1)
