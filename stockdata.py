@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-17 00:17:02
+#  Last Modified:  2019-09-17 09:00:19
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -31,14 +31,14 @@ class stockdata:
         # ts 接口
         self.pro = ts.pro_api()
         # 原始数据存数据库0
-        # self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
-        self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
+        self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
+        # self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
         # 加工后的数据存数据库1
-        # self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
-        self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
+        self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
+        # self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
         # 训练用数据存数据库2
-        # self.r2 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
-        self.r2 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=2)
+        self.r2 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
+        # self.r2 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=2)
 
     def get_today_date(self):
         return datetime.datetime.now().strftime("%Y%m%d")
