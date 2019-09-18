@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-18 15:40:54
+#  Last Modified:  2019-09-18 15:52:57
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -281,8 +281,8 @@ if __name__ == '__main__':
         # A.handle_date_trainning_data_save('20170103')
         # print(d)
         # d = A.get_stock_list_date_n('300425.SZ', '20170615')
-        # d = A.get_stock_list_date_n('002120.SZ', '20170919')
-        d = A.get_stock_list_date_n('600680.SH', '20170104')
+        d = A.get_stock_list_date_n('002120.SZ', '20170919')
+        # d = A.get_stock_list_date_n('600680.SH', '20170104')
         print(d, d.shape[0])
         # A.get_index_daily_all('20170105')
         # d = A.get_stock_basics()
