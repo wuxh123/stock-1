@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-10 15:42:58
-#  Last Modified:  2019-09-18 11:40:02
+#  Last Modified:  2019-09-18 12:43:39
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -34,7 +34,7 @@ r2 = r.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
 df1 = pickle.loads(zlib.decompress(r0.hget("20190917", "top_list")))
 df1 = df1.drop(['trade_date', "reason", "name"], axis=1)
 # df1 = df1.sort_values(by='pct_change', ascending=False)
-df1 = df1[df1.pct_change > 9.5]
+df1 = df1[df1.pct_change > 9.50]
 # print(type(df1))
 # print(df1.iat[0, 2])
 # print(type(df1.iat[0, 2]))

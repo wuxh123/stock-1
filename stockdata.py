@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-18 11:25:18
+#  Last Modified:  2019-09-18 15:40:54
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -31,14 +31,14 @@ class stockdata:
         # ts 接口
         self.pro = ts.pro_api()
         # 原始数据存数据库0
-        self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
-        # self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
+        # self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
+        self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
         # 数据处理标志存数据库1
-        self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
-        # self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
+        # self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
+        self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
         # 训练用数据存数据库2
-        self.r2 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
-        # self.r2 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=2)
+        # self.r2 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
+        self.r2 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=2)
 
     def get_today_date(self):
         return datetime.datetime.now().strftime("%Y%m%d")
@@ -214,23 +214,25 @@ class stockdata:
 
         next_day = ds_date[1]
         dr = self.r0.hexists(next_day, 'daily')
+        if dr is False:
+            print("skip: ", date, next_day)
+            return
 
-        if dr is True:
-            dfd = self.get_daily(next_day)
-            dfs = self.get_stk_limit(next_day)
-            df = pd.merge(dfd, dfs, on='ts_code')
-            df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
-            df = df['ts_code']
-            df = df.reset_index(drop=True)
+        dfd = self.get_daily(next_day)
+        dfs = self.get_stk_limit(next_day)
+        df = pd.merge(dfd, dfs, on='ts_code')
+        df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
+        df = df['ts_code']
+        df = df.reset_index(drop=True)
 
-            for i in range(df.shape[0]):
-                c = df.iat[i]
-                ret = self.r2.hexists(date, c)
-                if ret is False:
-                    dnf = self.get_stock_list_date_n(c, next_day)
-                    if dnf.shape[0] == 41:
-                        self.r2.hset(date, c, zlib.compress(pickle.dumps(dnf), 5))
-                        print("handle_uplimit_last_40days_data_save: ", date, c)
+        for i in range(df.shape[0]):
+            c = df.iat[i]
+            ret = self.r2.hexists(date, c)
+            if ret is False:
+                dnf = self.get_stock_list_date_n(c, next_day)
+                if dnf.shape[0] == 41:
+                    self.r2.hset(date, c, zlib.compress(pickle.dumps(dnf), 5))
+                    print("handle_uplimit_last_40days_data_save: ", date, c)
         self.r1.hset(date, "train_data", "ok")
 
     # 处理数据
