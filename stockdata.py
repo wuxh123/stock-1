@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-17 16:14:07
+#  Last Modified:  2019-09-18 11:25:18
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -80,7 +80,7 @@ class stockdata:
         df = df.head(41)
         df = df.sort_values("trade_date", ascending=True)
         df = df.reset_index(drop=True)
-        time.sleep(0.1)
+        time.sleep(0.2)
         return df
 
     #                                          date name
