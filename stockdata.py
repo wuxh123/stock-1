@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-18 15:52:57
+#  Last Modified:  2019-09-19 17:40:10
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -34,8 +34,8 @@ class stockdata:
         # self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
         self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
         # 数据处理标志存数据库1
-        # self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
-        self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
+        self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
+        # self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
         # 训练用数据存数据库2
         # self.r2 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
         self.r2 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=2)
@@ -55,7 +55,7 @@ class stockdata:
 
     def download_trade_cal_list(self):
         todaydate = self.get_today_date()
-        df = self.pro.query('trade_cal', start_date='20130101', end_date=todaydate)
+        df = self.pro.query('trade_cal', start_date='20000101', end_date=todaydate)
         df = df[df.is_open == 1]
         df = df['cal_date']
         df = df.reset_index(drop=True)
@@ -120,7 +120,7 @@ class stockdata:
         d3 = pickle.loads(zlib.decompress(self.r0.hget(date, '399006.SZ')))
         d1 = d1.append([d2, d3])
         d1 = d1.reset_index(drop=True)
-        print(d1)
+        # print(d1)
         return d1
 
     def download_top_list(self, date):
@@ -183,7 +183,7 @@ class stockdata:
     # 下载数据
     # 下载时间短的
     def download_all_data(self):
-        ds_date = self.get_trade_cal_list()
+        ds_date = self.get_trade_cal_list("20120101")
         print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
             self.download_index_daily_all(d)
@@ -253,6 +253,33 @@ class stockdata:
         for d in cal:
             self.handle_date_trainning_data_save(d)
 
+    #
+    def get_train_data_df(self, date, code):
+        df = pd.DataFrame()
+        if self.r2.hexists(date, code) is False:
+            return df
+        df = pickle.loads(zlib.decompress(self.r2.hget(date, code)))
+        return df
+
+    def get_date_up_limit_num(self, date):
+        c = self.r2.hkeys(date)
+        return len(c)
+
+    # tl{date:list[ts_code,],}
+    def get_all_train_data_list(self):
+        tl = {}
+        keys = self.r2.keys("20*")
+        keys.sort()
+        n = 0
+        for k in keys:
+            hkeys = self.r2.hkeys(k)
+            lt = []
+            for hk in hkeys:
+                lt.append(hk)
+            tl[k] = lt
+            n = n + len(hkeys)
+        return tl, n
+
 
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
@@ -272,29 +299,17 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'h':
             A.handle_trainning_data_all_save()
     else:
-        pass
         d = "ssss"
         # d = A.get_trade_cal_list()
-        # A.download_trade_cal_list()
-        # A.handle_trainning_data_all_save()
         # A.get_date_stock_num('20190911', '600818.SH')
         # A.handle_date_trainning_data_save('20170103')
-        # print(d)
         # d = A.get_stock_list_date_n('300425.SZ', '20170615')
-        d = A.get_stock_list_date_n('002120.SZ', '20170919')
+        a, n = A.get_all_train_data_list()
+        # a = A.get_date_up_limit_num('20190919')
+        print(n, " ", len(a))
+        # d = A.get_stock_list_date_n('002120.SZ', '20170919')
         # d = A.get_stock_list_date_n('600680.SH', '20170104')
-        print(d, d.shape[0])
+        # print(d, d.shape[0])
         # A.get_index_daily_all('20170105')
         # d = A.get_stock_basics()
     print("Time taken:", datetime.datetime.now() - startTime)
-
-
-# import zlib, pickle
-# redis.hset(key_name, field, df.to_msgpack(compress='zlib'))
-# pd.read_msgpack(redis.hget(key_name, field))
-
-# import zlib, pickle
-# redis.hset(key_name, field, zlib.compress(pickle.dumps(df), 5))
-# df = pickle.loads(zlib.decompress(redis.hget(key_name, field)))
-#
-# n= n.drop(index=(n.loc[n.ts_code == '002232.SZ'].index))
