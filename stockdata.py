@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-19 17:40:10
+#  Last Modified:  2019-09-20 10:47:04
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -34,8 +34,8 @@ class stockdata:
         # self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
         self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
         # 数据处理标志存数据库1
-        self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
-        # self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
+        # self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
+        self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
         # 训练用数据存数据库2
         # self.r2 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
         self.r2 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=2)
@@ -112,7 +112,8 @@ class stockdata:
     def download_index_daily_all(self, date):
         self.download_index_daily('000001.SH', date)
         self.download_index_daily('399001.SZ', date)
-        self.download_index_daily('399006.SZ', date)
+        if date >= "20100601":
+            self.download_index_daily('399006.SZ', date)
 
     def get_index_daily_all(self, date):
         d1 = pickle.loads(zlib.decompress(self.r0.hget(date, '000001.SH')))
@@ -183,7 +184,7 @@ class stockdata:
     # 下载数据
     # 下载时间短的
     def download_all_data(self):
-        ds_date = self.get_trade_cal_list("20120101")
+        ds_date = self.get_trade_cal_list("20090101")
         print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
             self.download_index_daily_all(d)
