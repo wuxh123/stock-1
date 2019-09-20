@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-20 10:47:04
+#  Last Modified:  2019-09-20 12:22:51
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -158,6 +158,9 @@ class stockdata:
             time.sleep(41)
 
     def download_block_trade(self, date):
+        # if date < "20081010":
+        if date < "20160108":
+            return
         b = self.check_exists_and_save(self.r0, self.pro.block_trade, date, 'block_trade')
         if b:
             time.sleep(0.8)
@@ -184,7 +187,7 @@ class stockdata:
     # 下载数据
     # 下载时间短的
     def download_all_data(self):
-        ds_date = self.get_trade_cal_list("20090101")
+        ds_date = self.get_trade_cal_list("20080101")
         print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
             self.download_index_daily_all(d)
