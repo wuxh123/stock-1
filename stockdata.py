@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-20 12:22:51
+#  Last Modified:  2019-09-20 15:54:33
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -198,7 +198,7 @@ class stockdata:
             self.download_block_trade(d)
 
     # 时间长的单独下载
-    def get_all_data2_save(self):
+    def download_all_data2_save(self):
         ds_date = self.get_trade_cal_list()
         print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
@@ -207,7 +207,7 @@ class stockdata:
 
     # ********************************************************************
     # 处理数据 从数据库0 读取数据 处理好后 存到数据库2 ,db1 保存标志
-    def handle_date_trainning_data_save(self, date):
+    def handle_date_training_data_save(self, date):
         if self.r1.hexists(date, "train_data"):
             return
 
@@ -242,20 +242,17 @@ class stockdata:
     # 处理数据
     # 从 数据库0 查询 获取某天某代码
     def get_date_stock_num(self, date, code):
-        ret = self.r0.hexists(date, 'daily')
-        if ret == 0:
-            return None
-        df = self.get_daily(date)
-        df = df[df.ts_code == code]
-        if df.empty is False:
+        df = pd.DataFrame()
+        if self.r0.hexists(date, 'daily') is False:
             return df
-        return None
+        df = self.get_daily(date)
+        return df[df.ts_code == code]
 
-    # data for trainning save in db1
-    def handle_trainning_data_all_save(self):
+    # data for training save in db1
+    def handle_training_data_all_save(self):
         cal = self.get_trade_cal_list('20170101')
         for d in cal:
-            self.handle_date_trainning_data_save(d)
+            self.handle_date_training_data_save(d)
 
     #
     def get_train_data_df(self, date, code):
@@ -284,6 +281,41 @@ class stockdata:
             n = n + len(hkeys)
         return tl, n
 
+    def download_today_data_for_predictor(self):
+        d = self.get_today_date()
+        h = datetime.datetime.now().strftime("%H")
+        y = datetime.date.today() + datetime.timedelta(-1)
+        y = y.strftime("%Y%m%d")
+
+        if h < "17":
+            print("get yesterday data: ", y)
+            d = y
+
+        dfd = self.get_daily(d)
+        dfs = self.get_stk_limit(d)
+        df = pd.merge(dfd, dfs, on='ts_code')
+        df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
+        df = df['ts_code']
+        df = df.reset_index(drop=True)
+
+        ldf = []
+        for i in range(df.shape[0]):
+            c = df.iat[i]
+            dnf = self.get_stock_list_date_n(c, d)
+            if dnf.empty is False:
+                dnf = dnf.tail(40)
+                dnf = dnf.reset_index(drop=True)
+                ldf.append(dnf)
+                print("download for predictor:  ", d, c)
+
+        self.r1.set("predictor", zlib.compress(pickle.dumps(ldf), 5))
+
+    def get_today_data_for_predictor(self):
+        ldf = []
+        if self.r1.exists("predictor") is False:
+            return ldf
+        return pickle.loads(zlib.decompress(self.r1.get("predictor")))
+
 
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
@@ -297,23 +329,26 @@ if __name__ == '__main__':
             A.download_stock_basic()
             A.download_trade_cal_list()
             A.download_all_data()
+            A.download_today_data_for_predictor()
         # download other
         elif sys.argv[1] == 'd2':
-            A.get_all_data2_save()
+            A.download_all_data2_save()
+        # handle training data
         elif sys.argv[1] == 'h':
-            A.handle_trainning_data_all_save()
+            A.handle_training_data_all_save()
     else:
-        d = "ssss"
+        d = "Test: ................."
+        d = A.get_today_data_for_predictor()
+        print(d[0])
         # d = A.get_trade_cal_list()
-        # A.get_date_stock_num('20190911', '600818.SH')
-        # A.handle_date_trainning_data_save('20170103')
-        # d = A.get_stock_list_date_n('300425.SZ', '20170615')
-        a, n = A.get_all_train_data_list()
+        # d = A.get_date_stock_num('20190920', '600818.SH')
+        # A.handle_date_training_data_save('20170103')
         # a = A.get_date_up_limit_num('20190919')
-        print(n, " ", len(a))
-        # d = A.get_stock_list_date_n('002120.SZ', '20170919')
+        # a, n = A.get_all_train_data_list()
+        # print(n, " ", len(a))
         # d = A.get_stock_list_date_n('600680.SH', '20170104')
         # print(d, d.shape[0])
         # A.get_index_daily_all('20170105')
         # d = A.get_stock_basics()
+        # print(d)
     print("Time taken:", datetime.datetime.now() - startTime)
