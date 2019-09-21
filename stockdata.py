@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-22 01:07:45
+#  Last Modified:  2019-09-22 01:46:59
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -29,16 +29,16 @@ class stockdata:
             tk = pickle.load(f)
             ts.set_token(tk)
         self.pro = ts.pro_api()
-        # 原始数据存数据库0
+        # 原始数据存数据库
         # self.original = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
         self.original = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
         # 原始数据 展开 加快处理速度
         # self.expand = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
         self.expand = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
-        # 数据处理标志 临时数据 存数据库1
+        # 数据处理标志 临时数据 存数据库
         # self.temp = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=2)
         self.temp = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=2)
-        # 训练用数据存数据库2
+        # 训练用数据存数据库
         # self.train_data = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=3)
         self.train_data = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=3)
 
@@ -258,6 +258,7 @@ class stockdata:
 
     def handle_date_training_data_save(self, date):
         if self.temp.hexists(date, "train_data"):
+            # pass
             return
 
         ds_date = self.get_trade_cal_list(date)
@@ -280,7 +281,7 @@ class stockdata:
                 dnf = self.get_stock_list_date_n(c, next_day)
                 if dnf.shape[0] == 41:
                     self.train_data.hset(date, c, zlib.compress(pickle.dumps(dnf), 5))
-                    print("handle_uplimit_last_40days_data_save: ", date, c)
+                    print("handle_date_training_data_save: ", date, c)
         self.temp.hset(date, "train_data", "ok")
 
     # 处理数据
@@ -391,8 +392,8 @@ if __name__ == '__main__':
         # d = A.get_trade_cal_list()
         # d = A.get_date_stock_num('20190920', '600818.SH')
         # A.handle_date_training_data_save('20170103')
-        a = A.get_stock_list_date_n('600818.SH', '20190918')
-        # a = A.get_train_data_df("20170310", "300304.SZ")
+        # a = A.get_stock_list_date_n('600818.SH', '20190918')
+        a = A.get_train_data_df("20170822", "002600.SZ")
         # A.expand_date_daily("20190916")
         # a = pickle.loads(zlib.decompress(A.expand.hget("20180919", "600818.SH")))
         # a = A.get_date_stock_num("20190917", "600818.SH")
