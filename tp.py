@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-21 14:08:04
+#  Last Modified:  2019-09-21 14:54:14
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -86,16 +86,19 @@ cfg.allow_soft_placement = True
 # print("batch[1]: ", len(batch[1]), type(batch[1]), batch[1].shape)
 # print("batch[0][0]: ", len(batch[0][0]), type(batch[0][0]), batch[0][0].shape)
 # print("batch[1][0]: ", len(batch[1][0]), type(batch[1][0]), batch[1][0].shape)
-# # print(batch[0][0])
+# print(batch[0][0])
 # print(batch[1][0])
 
 A = trd()
 a = A.get_all_train_data_list()
 al = len(a)
+# batch = A.make_train_data_from_df(a[0])
+# print(batch[0].shape)
+# print(batch[1].shape)
 # batch = A.make_train_data_from_df(a[1])
 # print(batch[0])
 # print(batch[1])
-#
+
 with tf.Session(config=cfg) as sess:
     sess.run(tf.global_variables_initializer())
     for i in range(al):
