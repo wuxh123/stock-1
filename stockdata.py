@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-21 23:04:23
+#  Last Modified:  2019-09-22 00:25:19
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -71,21 +71,8 @@ class stockdata:
         cal = cal.reset_index(drop=True)
         return cal
 
-    def get_stock_list_date_n(self, code, date):
-        da = self.get_stock_basics()
-        da = da[da.ts_code == code]
-        if da.empty is True:
-            return pd.DataFrame()
-        da = da['list_date'].iat[0]
-        df = self.pro.daily(ts_code=code, start_date=da, end_date=date)
-        df = df.head(41)
-        df = df.sort_values("trade_date", ascending=True)
-        df = df.reset_index(drop=True)
-        time.sleep(0.2)
-        return df
-
     # use local redis db
-    def get_stock_list_date_n2(self, code, date):
+    def get_stock_list_date_n(self, code, date):
         da = self.get_stock_basics()
         da = da[da.ts_code == code]
         if da.empty is True:
@@ -215,7 +202,7 @@ class stockdata:
 
     # expand daily
     def expand_date_daily(self, date):
-        if date < "20170101":
+        if date < "20160101":
             return
 
         if self.temp.hexists(date, "expand"):
@@ -223,7 +210,6 @@ class stockdata:
 
         df = self.get_daily(date)
         if df.empty is True:
-            print("get_daily error", date)
             return
 
         for i in df.index:
@@ -259,7 +245,6 @@ class stockdata:
             # self.download_stk_holdertrade(d)
 
     # ********************************************************************
-    # 处理数据 从数据库0 读取数据 处理好后 存到数据库2 ,db1 保存标志
     def get_date_up_limit_ts_code_df(self, date):
         dfd = self.get_daily(date)
         dfs = self.get_stk_limit(date)
@@ -290,8 +275,7 @@ class stockdata:
             c = df.iat[i]
             ret = self.train_data.hexists(date, c)
             if ret is False:
-                # dnf = self.get_stock_list_date_n(c, next_day)
-                dnf = self.get_stock_list_date_n2(c, next_day)
+                dnf = self.get_stock_list_date_n(c, next_day)
                 if dnf.shape[0] == 41:
                     self.train_data.hset(date, c, zlib.compress(pickle.dumps(dnf), 5))
                     print("handle_uplimit_last_40days_data_save: ", date, c)
@@ -301,10 +285,9 @@ class stockdata:
     # 从 数据库0 查询 获取某天某代码
     def get_date_stock_num(self, date, code):
         df = pd.DataFrame()
-        if self.original.hexists(date, 'daily') is False:
+        if self.expand.hexists(date, code) is False:
             return df
-        df = self.get_daily(date)
-        return df[df.ts_code == code]
+        return pickle.loads(zlib.decompress(self.expand.hget(date, code)))
 
     # data for training save in db1
     def handle_training_data_all_save(self):
@@ -352,6 +335,10 @@ class stockdata:
             d = dlist.iat[0]
             print("get previous trade day data: ", d)
 
+        if self.temp.exists("predictor_date"):
+            if self.temp.get("predictor_date").decode() == d:
+                return
+
         df = self.get_date_up_limit_ts_code_df(d)
 
         ldf = []
@@ -366,6 +353,7 @@ class stockdata:
                     print("download for predictor:  ", d, c)
 
         self.temp.set("predictor", zlib.compress(pickle.dumps(ldf), 5))
+        self.temp.set("predictor_date", d)
 
     def get_latest_data_for_predictor(self):
         ldf = []
@@ -401,12 +389,13 @@ if __name__ == '__main__':
         # d = A.get_trade_cal_list()
         # d = A.get_date_stock_num('20190920', '600818.SH')
         # A.handle_date_training_data_save('20170103')
-        # A.get_stock_list_date_n2('600818.SH', '20190918')
+        # A.get_stock_list_date_n('600818.SH', '20190918')
         # a = A.get_train_data_df("20170817", "300543.SZ")
-        A.expand_date_daily("20190916")
-        # a = pickle.loads(zlib.decompress(A.expand.hget("20190919", "600818.SH")))
+        # A.expand_date_daily("20190916")
+        # a = pickle.loads(zlib.decompress(A.expand.hget("20180919", "600818.SH")))
+        a = A.get_date_stock_num("20190917", "600818.SH")
+        print(a)
         # a = A.get_date_up_limit_num('20190919')
-        # d = A.get_stock_list_date_n('600680.SH', '20170104')
         # print(d, d.shape[0])
         # A.get_index_daily_all('20170105')
         # d = A.get_stock_basics()
