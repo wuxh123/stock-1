@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-21 22:53:05
+#  Last Modified:  2019-09-21 23:04:23
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -223,6 +223,7 @@ class stockdata:
 
         df = self.get_daily(date)
         if df.empty is True:
+            print("get_daily error", date)
             return
 
         for i in df.index:
