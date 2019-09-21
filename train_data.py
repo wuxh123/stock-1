@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-21 13:57:43
+#  Last Modified:  2019-09-21 14:05:13
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -55,9 +55,12 @@ class train_data:
             lnpar.append(self.make_a_predictor_x_data_from_df(df))
         return lnpar
 
+    def get_all_train_data_list(self):
+        return self.sd.get_all_train_data_list()
+
     def test(self):
         d = 0
-        ll = self.sd.get_all_train_data_list()
+        ll = self.get_all_train_data_list()
         print(len(ll))
         print(ll[0])
         return d
