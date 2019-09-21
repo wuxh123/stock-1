@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-21 11:24:54
+#  Last Modified:  2019-09-21 12:08:47
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -24,7 +24,7 @@ class train_data:
     def __init__(self):
         self.sd = stockdata()
 
-    def make_a_predictor_data_from_df(self, df):
+    def make_a_predictor_x_data_from_df(self, df):
         df = df.tail(40)
         df = df.drop(['change'], axis=1)
         df['trade_date'] = df.trade_date.apply(lambda x: float(x))
@@ -40,7 +40,7 @@ class train_data:
         ld = self.sd.get_latest_data_for_predictor()
         lnpar = []
         for df in ld:
-            lnpar.append(self.make_a_predictor_data_from_df(df))
+            lnpar.append(self.make_a_predictor_x_data_from_df(df))
         return lnpar
 
     def test(self):

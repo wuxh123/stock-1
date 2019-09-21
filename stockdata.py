@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-21 11:22:00
+#  Last Modified:  2019-09-21 12:15:57
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -207,6 +207,15 @@ class stockdata:
 
     # ********************************************************************
     # 处理数据 从数据库0 读取数据 处理好后 存到数据库2 ,db1 保存标志
+    def get_date_up_limit_ts_code_df(self, date):
+        dfd = self.get_daily(date)
+        dfs = self.get_stk_limit(date)
+        df = pd.merge(dfd, dfs, on='ts_code')
+        df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
+        df = df['ts_code']
+        df = df.reset_index(drop=True)
+        return df
+
     def handle_date_training_data_save(self, date):
         if self.r1.hexists(date, "train_data"):
             return
@@ -222,12 +231,7 @@ class stockdata:
             print("skip: ", date, next_day)
             return
 
-        dfd = self.get_daily(next_day)
-        dfs = self.get_stk_limit(next_day)
-        df = pd.merge(dfd, dfs, on='ts_code')
-        df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
-        df = df['ts_code']
-        df = df.reset_index(drop=True)
+        df = self.get_date_up_limit_ts_code_df(next_day)
 
         for i in range(df.shape[0]):
             c = df.iat[i]
@@ -294,12 +298,7 @@ class stockdata:
             d = y
             print("get previous trade day data: ", y)
 
-        dfd = self.get_daily(d)
-        dfs = self.get_stk_limit(d)
-        df = pd.merge(dfd, dfs, on='ts_code')
-        df = df[(df.close == df.up_limit) & (df.pct_chg > 6.0) & (df.pct_chg < 12.0)]
-        df = df['ts_code']
-        df = df.reset_index(drop=True)
+        df = self.get_date_up_limit_ts_code_df(d)
 
         ldf = []
         for i in range(df.shape[0]):
