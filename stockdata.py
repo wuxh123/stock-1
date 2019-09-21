@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-21 15:22:26
+#  Last Modified:  2019-09-21 16:07:33
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -82,6 +82,34 @@ class stockdata:
         df = df.reset_index(drop=True)
         time.sleep(0.2)
         return df
+
+    def get_stock_list_date_n2(self, code, date):
+        da = self.get_stock_basics()
+        da = da[da.ts_code == code]
+        if da.empty is True:
+            return pd.DataFrame()
+
+        da = da['list_date'].iat[0]
+        dl = self.get_trade_cal_list(da)
+        dl = dl[(dl > da) & ((dl <= date))]
+        dl = dl.sort_values(ascending=False)
+        dl = dl.reset_index(drop=True)
+        cnt = dl.shape[0]
+        if cnt < 41:
+            return pd.DataFrame()
+
+        df = pd.DataFrame()
+        for i in range(cnt):
+            dt = dl.iat[i]
+            dff = self.get_date_stock_num(dt, code)
+            if dff.empty is False:
+                df = df.append(dff)
+                if df.shape[0] == 41:
+                    df = df.sort_values("trade_date", ascending=True)
+                    df = df.reset_index(drop=True)
+                    return df
+
+        return pd.DataFrame()
 
     #                                          date name
     def check_exists_and_save(self, rds, func, key, field):
@@ -237,7 +265,8 @@ class stockdata:
             c = df.iat[i]
             ret = self.r2.hexists(date, c)
             if ret is False:
-                dnf = self.get_stock_list_date_n(c, next_day)
+                # dnf = self.get_stock_list_date_n(c, next_day)
+                dnf = self.get_stock_list_date_n2(c, next_day)
                 if dnf.shape[0] == 41:
                     self.r2.hset(date, c, zlib.compress(pickle.dumps(dnf), 5))
                     print("handle_uplimit_last_40days_data_save: ", date, c)
@@ -347,7 +376,8 @@ if __name__ == '__main__':
         print(d[0])
         # d = A.get_trade_cal_list()
         # d = A.get_date_stock_num('20190920', '600818.SH')
-        A.handle_date_training_data_save('20170103')
+        # A.handle_date_training_data_save('20170103')
+        A.get_stock_list_date_n2('600818.SH', '20190918')
         # a = A.get_date_up_limit_num('20190919')
         # d = A.get_stock_list_date_n('600680.SH', '20170104')
         # print(d, d.shape[0])
