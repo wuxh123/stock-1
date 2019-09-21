@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-21 16:07:33
+#  Last Modified:  2019-09-21 16:26:20
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -377,7 +377,9 @@ if __name__ == '__main__':
         # d = A.get_trade_cal_list()
         # d = A.get_date_stock_num('20190920', '600818.SH')
         # A.handle_date_training_data_save('20170103')
-        A.get_stock_list_date_n2('600818.SH', '20190918')
+        # A.get_stock_list_date_n2('600818.SH', '20190918')
+        a = A.get_train_data_df("20170817", "300543.SZ")
+        print(a)
         # a = A.get_date_up_limit_num('20190919')
         # d = A.get_stock_list_date_n('600680.SH', '20170104')
         # print(d, d.shape[0])
