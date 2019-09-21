@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-20 23:45:16
+#  Last Modified:  2019-09-21 11:24:54
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -24,39 +24,34 @@ class train_data:
     def __init__(self):
         self.sd = stockdata()
 
-    def test(self):
-        # d = self.sd.get_today_data_for_predictor()
-        # a = d[0]
-        # print(a)
-        a = self.sd.get_train_data_df("20190918", "603505.SH")
-        a = a.tail(40)
-        a['trade_date'] = a.trade_date.apply(lambda x: float(x))
-        a['ts_code'] = a.ts_code.apply(lambda x: float(x[:-3]))
-        a = a.drop(['change'], axis=1)
-        a = a.reset_index(drop=True)
-        a = np.array(a)
-        a = a.reshape(400)
-        # numpy.ndarray
-        print(a)
-        print(a.shape, type(a))
+    def make_a_predictor_data_from_df(self, df):
+        df = df.tail(40)
+        df = df.drop(['change'], axis=1)
+        df['trade_date'] = df.trade_date.apply(lambda x: float(x))
+        df['ts_code'] = df.ts_code.apply(lambda x: float(x[:-3]))
+        df = df.reset_index(drop=True)
+        df = np.array(df)
+        df = df.reshape(400)
 
-        b = np.pad(a, ((0, 384)), 'constant')
-        print(b, b.shape)
+        b = np.pad(df, ((0, 384)), 'constant')
         return b
 
+    def get_all_data_for_predictor(self):
+        ld = self.sd.get_latest_data_for_predictor()
+        lnpar = []
+        for df in ld:
+            lnpar.append(self.make_a_predictor_data_from_df(df))
+        return lnpar
 
-def imageprepare():
-    im = Image.open('a.png')
-    im = im.convert('L')
-    tv = list(im.getdata())
-    tva = [(255 - x) * 1.0 / 255.0 for x in tv]
-    print(type(tva[100]), len(tva))
-    return tva
+    def test(self):
+        d = 0
+        d = self.get_all_data_for_predictor()
+        print(d[0], len(d[0]), len(d))
+        return d
 
 
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
-    # imageprepare()
     a = train_data()
     a.test()
     print("Time taken:", datetime.datetime.now() - startTime)

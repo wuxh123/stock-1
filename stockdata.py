@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-21 10:45:45
+#  Last Modified:  2019-09-21 11:22:00
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -308,8 +308,9 @@ class stockdata:
             if dnf.empty is False:
                 dnf = dnf.tail(40)
                 dnf = dnf.reset_index(drop=True)
-                ldf.append(dnf)
-                print("download for predictor:  ", d, c)
+                if dnf.shape[0] >= 40:
+                    ldf.append(dnf)
+                    print("download for predictor:  ", d, c)
 
         self.r1.set("predictor", zlib.compress(pickle.dumps(ldf), 5))
 
