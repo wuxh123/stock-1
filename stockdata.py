@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-21 13:55:04
+#  Last Modified:  2019-09-21 15:22:26
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -231,7 +231,7 @@ class stockdata:
             print("skip: ", date, next_day)
             return
 
-        df = self.get_date_up_limit_ts_code_df(next_day)
+        df = self.get_date_up_limit_ts_code_df(date)
 
         for i in range(df.shape[0]):
             c = df.iat[i]
@@ -342,12 +342,12 @@ if __name__ == '__main__':
             A.handle_training_data_all_save()
     else:
         d = "Test: ................."
-        A.download_latest_data_for_predictor()
+        # A.download_latest_data_for_predictor()
         # d = A.get_latest_data_for_predictor()
         print(d[0])
         # d = A.get_trade_cal_list()
         # d = A.get_date_stock_num('20190920', '600818.SH')
-        # A.handle_date_training_data_save('20170103')
+        A.handle_date_training_data_save('20170103')
         # a = A.get_date_up_limit_num('20190919')
         # d = A.get_stock_list_date_n('600680.SH', '20170104')
         # print(d, d.shape[0])
