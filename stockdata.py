@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-22 00:25:19
+#  Last Modified:  2019-09-22 01:07:45
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -92,7 +92,9 @@ class stockdata:
             dt = dl.iat[i]
             dff = self.get_date_stock_num(dt, code)
             if dff.empty is False:
-                df = df.append(dff)
+                df = df.append(dff, ignore_index=True)
+                df = df[dff.index]
+                # 调整列顺序，上一行操作后会自动按字母顺序将列排序
                 if df.shape[0] == 41:
                     df = df.sort_values("trade_date", ascending=True)
                     df = df.reset_index(drop=True)
@@ -389,11 +391,11 @@ if __name__ == '__main__':
         # d = A.get_trade_cal_list()
         # d = A.get_date_stock_num('20190920', '600818.SH')
         # A.handle_date_training_data_save('20170103')
-        # A.get_stock_list_date_n('600818.SH', '20190918')
-        # a = A.get_train_data_df("20170817", "300543.SZ")
+        a = A.get_stock_list_date_n('600818.SH', '20190918')
+        # a = A.get_train_data_df("20170310", "300304.SZ")
         # A.expand_date_daily("20190916")
         # a = pickle.loads(zlib.decompress(A.expand.hget("20180919", "600818.SH")))
-        a = A.get_date_stock_num("20190917", "600818.SH")
+        # a = A.get_date_stock_num("20190917", "600818.SH")
         print(a)
         # a = A.get_date_up_limit_num('20190919')
         # print(d, d.shape[0])
