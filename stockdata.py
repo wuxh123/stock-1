@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-20 15:54:33
+#  Last Modified:  2019-09-21 10:45:45
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -281,15 +281,18 @@ class stockdata:
             n = n + len(hkeys)
         return tl, n
 
-    def download_today_data_for_predictor(self):
-        d = self.get_today_date()
-        h = datetime.datetime.now().strftime("%H")
-        y = datetime.date.today() + datetime.timedelta(-1)
-        y = y.strftime("%Y%m%d")
+    def download_latest_data_for_predictor(self):
+        dlist = self.get_trade_cal_list()
+        dlist = dlist[-2:]
+        d = dlist.iat[1]
+        y = dlist.iat[0]
+        td = self.get_today_date()
 
-        if h < "17":
-            print("get yesterday data: ", y)
+        h = datetime.datetime.now().strftime("%H")
+
+        if td == d and h < "17":
             d = y
+            print("get previous trade day data: ", y)
 
         dfd = self.get_daily(d)
         dfs = self.get_stk_limit(d)
@@ -310,7 +313,7 @@ class stockdata:
 
         self.r1.set("predictor", zlib.compress(pickle.dumps(ldf), 5))
 
-    def get_today_data_for_predictor(self):
+    def get_latest_data_for_predictor(self):
         ldf = []
         if self.r1.exists("predictor") is False:
             return ldf
@@ -329,7 +332,7 @@ if __name__ == '__main__':
             A.download_stock_basic()
             A.download_trade_cal_list()
             A.download_all_data()
-            A.download_today_data_for_predictor()
+            A.download_latest_data_for_predictor()
         # download other
         elif sys.argv[1] == 'd2':
             A.download_all_data2_save()
@@ -338,7 +341,8 @@ if __name__ == '__main__':
             A.handle_training_data_all_save()
     else:
         d = "Test: ................."
-        d = A.get_today_data_for_predictor()
+        A.download_latest_data_for_predictor()
+        # d = A.get_latest_data_for_predictor()
         print(d[0])
         # d = A.get_trade_cal_list()
         # d = A.get_date_stock_num('20190920', '600818.SH')
