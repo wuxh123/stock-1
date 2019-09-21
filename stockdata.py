@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-21 12:15:57
+#  Last Modified:  2019-09-21 13:55:04
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -33,7 +33,7 @@ class stockdata:
         # 原始数据存数据库0
         # self.r0 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
         self.r0 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
-        # 数据处理标志存数据库1
+        # 数据处理标志 临时数据 存数据库1
         # self.r1 = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
         self.r1 = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=1)
         # 训练用数据存数据库2
@@ -270,33 +270,33 @@ class stockdata:
         c = self.r2.hkeys(date)
         return len(c)
 
-    # tl{date:list[ts_code,],}
     def get_all_train_data_list(self):
-        tl = {}
+        return pickle.loads(zlib.decompress(self.r1.get("all_train_data")))
+
+    def save_all_train_data_list(self):
+        print("save_all_train_data_list: ")
+        ldf = []
         keys = self.r2.keys("20*")
         keys.sort()
-        n = 0
         for k in keys:
             hkeys = self.r2.hkeys(k)
-            lt = []
+            hkeys.sort()
             for hk in hkeys:
-                lt.append(hk)
-            tl[k] = lt
-            n = n + len(hkeys)
-        return tl, n
+                df = pickle.loads(zlib.decompress(self.r2.hget(k, hk)))
+                ldf.append(df)
+        self.r1.set("all_train_data", zlib.compress(pickle.dumps(ldf), 5))
 
     def download_latest_data_for_predictor(self):
         dlist = self.get_trade_cal_list()
         dlist = dlist[-2:]
         d = dlist.iat[1]
-        y = dlist.iat[0]
         td = self.get_today_date()
 
         h = datetime.datetime.now().strftime("%H")
 
         if td == d and h < "17":
-            d = y
-            print("get previous trade day data: ", y)
+            d = dlist.iat[0]
+            print("get previous trade day data: ", d)
 
         df = self.get_date_up_limit_ts_code_df(d)
 
@@ -333,6 +333,7 @@ if __name__ == '__main__':
             A.download_trade_cal_list()
             A.download_all_data()
             A.download_latest_data_for_predictor()
+            A.save_all_train_data_list()
         # download other
         elif sys.argv[1] == 'd2':
             A.download_all_data2_save()
@@ -348,8 +349,6 @@ if __name__ == '__main__':
         # d = A.get_date_stock_num('20190920', '600818.SH')
         # A.handle_date_training_data_save('20170103')
         # a = A.get_date_up_limit_num('20190919')
-        # a, n = A.get_all_train_data_list()
-        # print(n, " ", len(a))
         # d = A.get_stock_list_date_n('600680.SH', '20170104')
         # print(d, d.shape[0])
         # A.get_index_daily_all('20170105')
