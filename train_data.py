@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-21 14:51:56
+#  Last Modified:  2019-09-21 15:01:41
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -65,11 +65,13 @@ class train_data:
 
     def test(self):
         d = 0
-        # ll = self.get_all_train_data_list()
-        # print(len(ll))
-        # print(ll[0])
-        d = self.sd.get_train_data_df('20190919', '603111.SH')
+        d = self.sd.get_train_data_df('20190919', '002915.SZ')
+        if d.empty:
+            print(" empty........")
+            return
         batch = self.make_train_data_from_df(d)
+        print(batch[0][0])
+        print(batch[1][0])
         print("batch: ", len(batch), type(batch))
         print("batch[0]: ", len(batch[0]), type(batch[0]), batch[0].shape)
         print("batch[1]: ", len(batch[1]), type(batch[1]), batch[1].shape)

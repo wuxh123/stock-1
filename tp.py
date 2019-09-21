@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-21 14:54:14
+#  Last Modified:  2019-09-21 14:56:33
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -102,7 +102,6 @@ al = len(a)
 with tf.Session(config=cfg) as sess:
     sess.run(tf.global_variables_initializer())
     for i in range(al):
-        # batch = mnist.train.next_batch(50)
         batch = A.make_train_data_from_df(a[i])
         if i % 100 == 0:
             train_accuracy = accuracy.eval(feed_dict={
