@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-22 01:46:59
+#  Last Modified:  2019-09-22 22:48:25
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -258,7 +258,6 @@ class stockdata:
 
     def handle_date_training_data_save(self, date):
         if self.temp.hexists(date, "train_data"):
-            # pass
             return
 
         ds_date = self.get_trade_cal_list(date)
@@ -287,9 +286,8 @@ class stockdata:
     # 处理数据
     # 从 数据库0 查询 获取某天某代码
     def get_date_stock_num(self, date, code):
-        df = pd.DataFrame()
         if self.expand.hexists(date, code) is False:
-            return df
+            return pd.DataFrame()
         return pickle.loads(zlib.decompress(self.expand.hget(date, code)))
 
     # data for training save in db1
@@ -300,11 +298,9 @@ class stockdata:
 
     #
     def get_train_data_df(self, date, code):
-        df = pd.DataFrame()
         if self.train_data.hexists(date, code) is False:
-            return df
-        df = pickle.loads(zlib.decompress(self.train_data.hget(date, code)))
-        return df
+            return pd.DataFrame()
+        return pickle.loads(zlib.decompress(self.train_data.hget(date, code)))
 
     def get_date_up_limit_num(self, date):
         c = self.train_data.hkeys(date)
@@ -378,13 +374,13 @@ if __name__ == '__main__':
             A.download_trade_cal_list()
             A.download_all_data()
             A.download_latest_data_for_predictor()
-            A.save_all_train_data_list()
         # download other
         elif sys.argv[1] == 'd2':
             A.download_all_data2_save()
         # handle training data
         elif sys.argv[1] == 'h':
             A.handle_training_data_all_save()
+            A.save_all_train_data_list()
     else:
         d = "Test: ................."
         # A.download_latest_data_for_predictor()

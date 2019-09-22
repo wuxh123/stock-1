@@ -6,19 +6,17 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-21 14:56:33
+#  Last Modified:  2019-09-22 23:01:06
 #       Revision:  none
 #       Compiler:  gcc
 #
 #         Author:  zt ()
 #   Organization:
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-# from tensorflow.examples.tutorials.mnist import input_data
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from train_data import train_data as trd
 import tensorflow as tf
 
-# mnist = input_data.read_data_sets('MNIST_data', one_hot=True)  # MNIST数据集所在路径
 x = tf.placeholder(tf.float32, [None, 784])
 y_ = tf.placeholder(tf.float32, [None, 10])
 
@@ -79,15 +77,6 @@ saver = tf.train.Saver()  # 定义saver
 cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
 cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
 cfg.allow_soft_placement = True
-
-# batch = mnist.train.next_batch(5)
-# print("batch: ", len(batch), type(batch))
-# print("batch[0]: ", len(batch[0]), type(batch[0]), batch[0].shape)
-# print("batch[1]: ", len(batch[1]), type(batch[1]), batch[1].shape)
-# print("batch[0][0]: ", len(batch[0][0]), type(batch[0][0]), batch[0][0].shape)
-# print("batch[1][0]: ", len(batch[1][0]), type(batch[1][0]), batch[1][0].shape)
-# print(batch[0][0])
-# print(batch[1][0])
 
 A = trd()
 a = A.get_all_train_data_list()

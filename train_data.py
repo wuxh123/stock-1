@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-21 15:22:33
+#  Last Modified:  2019-09-22 22:59:02
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -14,9 +14,7 @@
 #   Organization:
 
 import datetime
-
 import numpy as np
-from PIL import Image, ImageFilter
 from stockdata import stockdata
 
 
@@ -64,8 +62,8 @@ class train_data:
         return self.sd.get_all_train_data_list()
 
     def test(self):
-        d = 0
         d = self.sd.get_train_data_df('20190919', '002915.SZ')
+        print(d)
         if d.empty:
             print(" empty........")
             return
@@ -77,7 +75,6 @@ class train_data:
         print("batch[1]: ", len(batch[1]), type(batch[1]), batch[1].shape)
         print("batch[0][0]: ", len(batch[0][0]), type(batch[0][0]), batch[0][0].shape)
         print("batch[1][0]: ", len(batch[1][0]), type(batch[1][0]), batch[1][0].shape)
-        return d
 
 
 if __name__ == '__main__':
