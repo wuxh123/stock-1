@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-23 10:01:31
+#  Last Modified:  2019-09-23 10:09:27
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -147,22 +147,25 @@ class stockdata:
         self.check_exists_and_save(self.original, self.pro.top_list, date, 'top_list')
 
     def get_top_list(self, date):
-        df = pickle.loads(zlib.decompress(self.original.hget(date, 'top_list')))
-        return df
+        if self.original.hexists(date, 'top_list'):
+            return pickle.loads(zlib.decompress(self.original.hget(date, 'top_list')))
+        return pd.DataFrame()
 
     def download_top_inst(self, date):
         self.check_exists_and_save(self.original, self.pro.top_inst, date, 'top_inst')
 
     def get_top_inst(self, date):
-        df = pickle.loads(zlib.decompress(self.original.hget(date, 'top_inst')))
-        return df
+        if self.original.hexists(date, 'top_inst'):
+            return pickle.loads(zlib.decompress(self.original.hget(date, 'top_inst')))
+        return pd.DataFrame()
 
     def download_stk_limit(self, date):
         self.check_exists_and_save(self.original, self.pro.stk_limit, date, 'stk_limit')
 
     def get_stk_limit(self, date):
-        df = pickle.loads(zlib.decompress(self.original.hget(date, 'stk_limit')))
-        return df
+        if self.original.hexists(date, 'stk_limit'):
+            return pickle.loads(zlib.decompress(self.original.hget(date, 'stk_limit')))
+        return pd.DataFrame()
 
     def download_daily(self, date):
         self.check_exists_and_save(self.original, self.pro.daily, date, 'daily')
@@ -186,8 +189,9 @@ class stockdata:
             time.sleep(0.8)
 
     def get_block_trade(self, date):
-        df = pickle.loads(zlib.decompress(self.original.hget(date, 'block_trade')))
-        return df
+        if self.original.hexists(date, "block_trade"):
+            return pickle.loads(zlib.decompress(self.original.hget(date, 'block_trade')))
+        return pd.DataFrame()
 
     def download_stk_holdertrade(self, date):
         self.check_exists_and_save(self.original, self.pro.stk_holdertrade, date, 'stk_holdertrade')
