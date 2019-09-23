@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-23 11:35:02
+#  Last Modified:  2019-09-23 14:22:16
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -31,9 +31,9 @@ class train_data:
         df = df.reset_index(drop=True)
         df = np.array(df)
         df = df.reshape(400)
+        b = df
 
-        b = np.pad(df, ((0, 384)), 'constant')
-        # b = df
+        # b = np.pad(df, ((0, 384)), 'constant')
         return b
 
     def make_train_data_from_df(self, df):
@@ -48,7 +48,8 @@ class train_data:
         y[_y] = 1
         x = _x
 
-        x = x.reshape(1, 784)
+        # x = x.reshape(1, 784)
+        x = x.reshape(1, 400)
         y = y.reshape(1, 10)
 
         return (x, y)

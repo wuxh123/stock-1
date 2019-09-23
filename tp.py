@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-23 11:35:55
+#  Last Modified:  2019-09-23 14:09:14
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -83,13 +83,12 @@ cfg.allow_soft_placement = True
 A = trd()
 a = A.get_all_train_data_list()
 al = len(a)
-al = al // 10
-al = al * 10
+al = al // 50
 
 with tf.Session(config=cfg) as sess:
     sess.run(tf.global_variables_initializer())
     for i in range(al):
-        batch = A.get_batch_data(a, 10)
+        batch = A.get_batch_data(a, 50)
         if i % 100 == 0:
             train_accuracy = accuracy.eval(feed_dict={
                 x: batch[0], y_: batch[1], keep_prob: 1.0})
@@ -99,3 +98,4 @@ with tf.Session(config=cfg) as sess:
 
     # print('test accuracy %g' % accuracy.eval(feed_dict={
     # x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+print(len(a))
