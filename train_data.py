@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-22 23:40:24
+#  Last Modified:  2019-09-23 11:35:02
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -21,6 +21,7 @@ from stockdata import stockdata
 class train_data:
     def __init__(self):
         self.sd = stockdata()
+        self.i = 0
 
     def make_a_predictor_x_data_from_df(self, df):
         df = df.tail(40)
@@ -32,6 +33,7 @@ class train_data:
         df = df.reshape(400)
 
         b = np.pad(df, ((0, 384)), 'constant')
+        # b = df
         return b
 
     def make_train_data_from_df(self, df):
@@ -61,6 +63,17 @@ class train_data:
     def get_all_train_data_list(self):
         return self.sd.get_all_train_data_list()
 
+    def get_batch_data(self, dl, n):
+        x, y = self.make_train_data_from_df(dl[self.i])
+        for i in range(1, n):
+            _x, _y = self.make_train_data_from_df(dl[self.i + i])
+            x = np.vstack([x, _x])
+            y = np.vstack([y, _y])
+        self.i = self.i + n
+        # print(x.shape)
+        # print(y.shape)
+        return (x, y)
+
     def test(self):
         d = self.sd.get_train_data_df('20190919', '002915.SZ')
         print(d)
@@ -80,5 +93,10 @@ class train_data:
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
-    a.test()
+    dl = a.get_all_train_data_list()
+    c = a.get_batch_data(dl, 5)
+    d = a.get_batch_data(dl, 5)
+    print(c)
+    print(d)
+
     print("Time taken:", datetime.datetime.now() - startTime)

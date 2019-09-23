@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-22 23:41:25
+#  Last Modified:  2019-09-23 11:35:55
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -39,7 +39,8 @@ def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
 
-W_conv1 = weight_variable([5, 5, 1, 32])
+# W_conv1 = weight_variable([5, 5, 1, 32])
+W_conv1 = weight_variable([1, 1, 1, 32])
 b_conv1 = bias_variable([32])
 
 x_image = tf.reshape(x, [-1, 28, 28, 1])
@@ -47,7 +48,8 @@ x_image = tf.reshape(x, [-1, 28, 28, 1])
 h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 h_pool1 = max_pool_2x2(h_conv1)
 
-W_conv2 = weight_variable([5, 5, 32, 64])
+# W_conv2 = weight_variable([5, 5, 32, 64])
+W_conv2 = weight_variable([1, 1, 32, 64])
 b_conv2 = bias_variable([64])
 
 h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
@@ -81,11 +83,13 @@ cfg.allow_soft_placement = True
 A = trd()
 a = A.get_all_train_data_list()
 al = len(a)
+al = al // 10
+al = al * 10
 
 with tf.Session(config=cfg) as sess:
     sess.run(tf.global_variables_initializer())
     for i in range(al):
-        batch = A.make_train_data_from_df(a[i])
+        batch = A.get_batch_data(a, 10)
         if i % 100 == 0:
             train_accuracy = accuracy.eval(feed_dict={
                 x: batch[0], y_: batch[1], keep_prob: 1.0})
