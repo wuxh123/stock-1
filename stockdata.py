@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-22 22:48:25
+#  Last Modified:  2019-09-23 10:01:31
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -168,8 +168,9 @@ class stockdata:
         self.check_exists_and_save(self.original, self.pro.daily, date, 'daily')
 
     def get_daily(self, date):
-        df = pickle.loads(zlib.decompress(self.original.hget(date, 'daily')))
-        return df
+        if self.original.hexists(date, 'daily'):
+            return pickle.loads(zlib.decompress(self.original.hget(date, 'daily')))
+        return pd.DataFrame()
 
     def download_hk_hold(self, date):
         b = self.check_exists_and_save(self.original, self.pro.hk_hold, date, 'hk_hold')
@@ -230,10 +231,10 @@ class stockdata:
         ds_date = self.get_trade_cal_list("20080101")
         print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
+            self.download_stk_limit(d)
             self.download_index_daily_all(d)
             self.download_top_list(d)
             self.download_top_inst(d)
-            self.download_stk_limit(d)
             self.download_daily(d)
             self.download_block_trade(d)
             self.expand_date_daily(d)
@@ -283,14 +284,11 @@ class stockdata:
                     print("handle_date_training_data_save: ", date, c)
         self.temp.hset(date, "train_data", "ok")
 
-    # 处理数据
-    # 从 数据库0 查询 获取某天某代码
     def get_date_stock_num(self, date, code):
         if self.expand.hexists(date, code) is False:
             return pd.DataFrame()
         return pickle.loads(zlib.decompress(self.expand.hget(date, code)))
 
-    # data for training save in db1
     def handle_training_data_all_save(self):
         cal = self.get_trade_cal_list('20170101')
         for d in cal:
@@ -330,7 +328,7 @@ class stockdata:
 
         h = datetime.datetime.now().strftime("%H")
 
-        if td == d and h < "17":
+        if td == d and h < "18":
             d = dlist.iat[0]
             print("get previous trade day data: ", d)
 
