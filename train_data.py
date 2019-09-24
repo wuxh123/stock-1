@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-24 15:44:37
+#  Last Modified:  2019-09-24 15:59:36
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -16,6 +16,7 @@
 import datetime
 import numpy as np
 from stockdata import stockdata
+import matplotlib.pyplot as plt
 
 
 class train_data:
@@ -108,7 +109,11 @@ class train_data:
         pass
 
     def test2(self):
-        print(self.df_sh)
+        # print(self.df_sh)
+        d = self.df_sh.iloc[:, 4].tolist()
+        # print(d)
+        plt.plot(d)
+        plt.show()
 
 
 if __name__ == '__main__':
