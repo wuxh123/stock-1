@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-23 15:56:03
+#  Last Modified:  2019-09-24 08:27:39
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -323,7 +323,7 @@ class stockdata:
                 ldf.append(df)
         self.temp.set("all_train_data", zlib.compress(pickle.dumps(ldf), 5))
 
-    def download_latest_data_for_predictor(self):
+    def gen_latest_data_for_predictor(self):
         dlist = self.get_trade_cal_list()
         dlist = dlist[-2:]
         d = dlist.iat[1]
@@ -350,7 +350,7 @@ class stockdata:
                 dnf = dnf.reset_index(drop=True)
                 if dnf.shape[0] >= 40:
                     ldf.append(dnf)
-                    print("download for predictor:  ", d, c)
+                    print("gen for predictor:  ", d, c)
 
         self.temp.set("predictor", zlib.compress(pickle.dumps(ldf), 5))
         self.temp.set("predictor_date", d)
@@ -374,7 +374,7 @@ if __name__ == '__main__':
             A.download_stock_basic()
             A.download_trade_cal_list()
             A.download_all_data()
-            A.download_latest_data_for_predictor()
+            A.gen_latest_data_for_predictor()
         # download other
         elif sys.argv[1] == 'd2':
             A.download_all_data2_save()
@@ -384,7 +384,7 @@ if __name__ == '__main__':
             A.save_all_train_data_list()
     else:
         d = "Test: ................."
-        # A.download_latest_data_for_predictor()
+        # A.gen_latest_data_for_predictor()
         # d = A.get_latest_data_for_predictor()
         # d = A.get_trade_cal_list()
         # d = A.get_date_stock_num('20190920', '600818.SH')
