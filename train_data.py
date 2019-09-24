@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-24 14:35:30
+#  Last Modified:  2019-09-24 15:44:37
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -22,6 +22,7 @@ class train_data:
     def __init__(self):
         self.sd = stockdata()
         self.i = 0
+        self.df_sh = self.get_stock_daily_train_df()
 
     def make_a_predictor_x_data_from_df(self, df):
         df = df.tail(40)
@@ -88,20 +89,26 @@ class train_data:
         print("batch[0][0]: ", len(batch[0][0]), type(batch[0][0]), batch[0][0].shape)
         print("batch[1][0]: ", len(batch[1][0]), type(batch[1][0]), batch[1][0].shape)
 
-    def get_stock_daily_train_data(self):
-        df = self.sd.get_index_daily_sh_for_test()
-        df = df.drop(['change'], axis=1)
-        df = df.drop(['ts_code'], axis=1)
-        print(df)
-
-    def get_stock_daily_test_data(self):
+    def make_a_lstm_data(self, df):
         pass
 
-    def get_stock_daily_predict_data(self):
+    def get_stock_daily_train_df(self):
+        df = self.sd.get_index_daily_sh()
+        # df = self.sd.get_index_daily_sz()
+        # df = self.sd.get_index_daily_cyb()
+        df = df.drop(['ts_code'], axis=1)
+        df['trade_date'] = df.trade_date.apply(lambda x: float(x))
+        df = df.sort_values(by='trade_date', ascending=True)
+        return df.reset_index(drop=True)
+
+    def get_stock_daily_test_df(self):
+        pass
+
+    def get_stock_daily_predict_df(self):
         pass
 
     def test2(self):
-        self.get_stock_daily_train_data()
+        print(self.df_sh)
 
 
 if __name__ == '__main__':
