@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-24 08:59:42
+#  Last Modified:  2019-09-24 09:15:34
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -88,14 +88,18 @@ class train_data:
         print("batch[0][0]: ", len(batch[0][0]), type(batch[0][0]), batch[0][0].shape)
         print("batch[1][0]: ", len(batch[1][0]), type(batch[1][0]), batch[1][0].shape)
 
+    def test2(self):
+        pass
+
 
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
-    dl = a.get_all_train_data_list()
-    c = a.get_batch_data(dl, 5)
-    d = a.get_batch_data(dl, 5)
-    print(c)
-    print(d)
+    a.test()
+    # dl = a.get_all_train_data_list()
+    # c = a.get_batch_data(dl, 5)
+    # d = a.get_batch_data(dl, 5)
+    # print(c)
+    # print(d)
 
     print("Time taken:", datetime.datetime.now() - startTime)

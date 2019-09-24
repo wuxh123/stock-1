@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-23 10:09:27
+#  Last Modified:  2019-09-24 08:27:39
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -181,7 +181,6 @@ class stockdata:
             time.sleep(41)
 
     def download_block_trade(self, date):
-        # if date < "20081010":
         if date < "20160108":
             return
         b = self.check_exists_and_save(self.original, self.pro.block_trade, date, 'block_trade')
@@ -209,7 +208,7 @@ class stockdata:
 
     # expand daily
     def expand_date_daily(self, date):
-        if date < "20160101":
+        if date < "20151001":
             return
 
         if self.temp.hexists(date, "expand"):
@@ -294,7 +293,7 @@ class stockdata:
         return pickle.loads(zlib.decompress(self.expand.hget(date, code)))
 
     def handle_training_data_all_save(self):
-        cal = self.get_trade_cal_list('20170101')
+        cal = self.get_trade_cal_list('20160101')
         for d in cal:
             self.handle_date_training_data_save(d)
 
@@ -324,7 +323,7 @@ class stockdata:
                 ldf.append(df)
         self.temp.set("all_train_data", zlib.compress(pickle.dumps(ldf), 5))
 
-    def download_latest_data_for_predictor(self):
+    def gen_latest_data_for_predictor(self):
         dlist = self.get_trade_cal_list()
         dlist = dlist[-2:]
         d = dlist.iat[1]
@@ -334,7 +333,7 @@ class stockdata:
 
         if td == d and h < "18":
             d = dlist.iat[0]
-            print("get previous trade day data: ", d)
+            print("use previous trade day data: ", d)
 
         if self.temp.exists("predictor_date"):
             if self.temp.get("predictor_date").decode() == d:
@@ -351,7 +350,7 @@ class stockdata:
                 dnf = dnf.reset_index(drop=True)
                 if dnf.shape[0] >= 40:
                     ldf.append(dnf)
-                    print("download for predictor:  ", d, c)
+                    print("gen for predictor:  ", d, c)
 
         self.temp.set("predictor", zlib.compress(pickle.dumps(ldf), 5))
         self.temp.set("predictor_date", d)
@@ -375,7 +374,7 @@ if __name__ == '__main__':
             A.download_stock_basic()
             A.download_trade_cal_list()
             A.download_all_data()
-            A.download_latest_data_for_predictor()
+            A.gen_latest_data_for_predictor()
         # download other
         elif sys.argv[1] == 'd2':
             A.download_all_data2_save()
@@ -385,7 +384,7 @@ if __name__ == '__main__':
             A.save_all_train_data_list()
     else:
         d = "Test: ................."
-        # A.download_latest_data_for_predictor()
+        # A.gen_latest_data_for_predictor()
         # d = A.get_latest_data_for_predictor()
         # d = A.get_trade_cal_list()
         # d = A.get_date_stock_num('20190920', '600818.SH')
@@ -394,7 +393,6 @@ if __name__ == '__main__':
         a = A.get_train_data_df("20170822", "002600.SZ")
         # A.expand_date_daily("20190916")
         # a = pickle.loads(zlib.decompress(A.expand.hget("20180919", "600818.SH")))
-        # a = A.get_date_stock_num("20190917", "600818.SH")
         print(a)
         # a = A.get_date_up_limit_num('20190919')
         # print(d, d.shape[0])
