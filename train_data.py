@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-24 16:33:09
+#  Last Modified:  2019-09-24 16:38:15
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -40,7 +40,7 @@ class train_data:
         df['trade_date'] = df.trade_date.apply(lambda x: float(x))
         df['ts_code'] = df.ts_code.apply(lambda x: float(x[:-3]))
         df = df.reset_index(drop=True)
-        print(df.shape)
+        # print(df.shape)
 
         self.ninput = df.shape[1]
         self.tinput = df.shape[0]
@@ -54,7 +54,7 @@ class train_data:
     def make_train_data_from_df(self, df):
         dn = df.tail(1)
         _x = self.make_a_predictor_x_data_from_df(df)
-        _y = dn['pct_chg_x'].iat[0]
+        _y = dn['pct_chg'].iat[0]
         # -10-> 10 转化为 0-9
         _y = _y + 10.005
         _y = int(round(_y, 0))
@@ -133,8 +133,10 @@ class train_data:
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
-    d = a.sd.get_train_data_df('20190923', '002354.SZ')
-    a.make_a_predictor_x_data_from_df(d)
+    df = a.sd.get_train_data_df('20190923', '002354.SZ')
+    # a.make_a_predictor_x_data_from_df(d)
+    d = a.make_train_data_from_df(df)
+    print(d)
     # a.test2()
     # dl = a.get_all_train_data_list()
     # c = a.get_batch_data(dl, 5)

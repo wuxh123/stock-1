@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-24 09:02:32
+#  Last Modified:  2019-09-24 16:45:11
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -23,10 +23,16 @@ learning_rate = 0.001  # 学习率
 batch_size = 25  # 批量大小
 display_step = 50
 
+A = trd()
+a = A.get_all_train_data_list()
+al = len(a)
+al = al // batch_size
+
+
 # 网络参数
-num_input = 10  # 每行多少个数据
+num_input = 18  # 每行多少个数据
 timesteps = 40  # 多少个时间序列
-num_hidden = 256  # 隐藏层神经元数
+num_hidden = 64  # 隐藏层神经元数
 num_classes = 21  # 数据集类别数
 
 
@@ -85,17 +91,14 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 # 初始化全局变量
 init = tf.global_variables_initializer()
 
-cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
-cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
-cfg.allow_soft_placement = True
+# cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+# cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
+# cfg.allow_soft_placement = True
 
-A = trd()
-a = A.get_all_train_data_list()
-al = len(a)
-al = al // batch_size
 
 # Start training
-with tf.Session(config=cfg) as sess:
+# with tf.Session(config=cfg) as sess:
+with tf.Session() as sess:
     sess.run(init)
 
     for step in range(al):
