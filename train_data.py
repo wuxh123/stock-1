@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-23 14:22:16
+#  Last Modified:  2019-09-24 08:59:42
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -32,7 +32,6 @@ class train_data:
         df = np.array(df)
         df = df.reshape(400)
         b = df
-
         # b = np.pad(df, ((0, 384)), 'constant')
         return b
 
@@ -41,16 +40,15 @@ class train_data:
         _x = self.make_a_predictor_x_data_from_df(df)
         _y = dn['pct_chg'].iat[0]
         # -10-> 10 转化为 0-9
-        _y = 0.45 * _y + 4.5
-        _y = _y + 0.005
+        _y = _y + 10.005
         _y = int(round(_y, 0))
-        y = np.zeros(10)
+        y = np.zeros(21)
         y[_y] = 1
         x = _x
 
         # x = x.reshape(1, 784)
         x = x.reshape(1, 400)
-        y = y.reshape(1, 10)
+        y = y.reshape(1, 21)
 
         return (x, y)
 
