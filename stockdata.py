@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-24 08:27:39
+#  Last Modified:  2019-09-24 14:25:59
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -361,6 +361,10 @@ class stockdata:
             return ldf
         return pickle.loads(zlib.decompress(self.temp.get("predictor")))
 
+    def get_index_daily_sh_for_test(self):
+        df = self.pro.index_daily(ts_code='000001.SH', start_date='20000101')
+        return df
+
 
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
@@ -390,7 +394,8 @@ if __name__ == '__main__':
         # d = A.get_date_stock_num('20190920', '600818.SH')
         # A.handle_date_training_data_save('20170103')
         # a = A.get_stock_list_date_n('600818.SH', '20190918')
-        a = A.get_train_data_df("20170822", "002600.SZ")
+        # a = A.get_train_data_df("20170822", "002600.SZ")
+        a = A.get_index_daily_sh_for_test()
         # A.expand_date_daily("20190916")
         # a = pickle.loads(zlib.decompress(A.expand.hget("20180919", "600818.SH")))
         print(a)
