@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-23 14:09:14
+#  Last Modified:  2019-09-23 16:47:09
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -17,7 +17,10 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from train_data import train_data as trd
 import tensorflow as tf
 
-x = tf.placeholder(tf.float32, [None, 784])
+BATCH_SIZE = 25
+
+# x = tf.placeholder(tf.float32, [None, 784])
+x = tf.placeholder(tf.float32, [None, 400])
 y_ = tf.placeholder(tf.float32, [None, 10])
 
 
@@ -39,26 +42,27 @@ def max_pool_2x2(x):
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
 
-# W_conv1 = weight_variable([5, 5, 1, 32])
-W_conv1 = weight_variable([1, 1, 1, 32])
+W_conv1 = weight_variable([5, 5, 1, 32])
 b_conv1 = bias_variable([32])
 
-x_image = tf.reshape(x, [-1, 28, 28, 1])
+# x_image = tf.reshape(x, [-1, 28, 28, 1])
+x_image = tf.reshape(x, [-1, 20, 20, 1])
 
 h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 h_pool1 = max_pool_2x2(h_conv1)
 
-# W_conv2 = weight_variable([5, 5, 32, 64])
-W_conv2 = weight_variable([1, 1, 32, 64])
+W_conv2 = weight_variable([5, 5, 32, 64])
 b_conv2 = bias_variable([64])
 
 h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
 h_pool2 = max_pool_2x2(h_conv2)
 
-W_fc1 = weight_variable([7 * 7 * 64, 1024])
+# W_fc1 = weight_variable([7 * 7 * 64, 1024])
+W_fc1 = weight_variable([25 * 25 * 64, 1024])
 b_fc1 = bias_variable([1024])
 
-h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
+# h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
+h_pool2_flat = tf.reshape(h_pool2, [-1, 25 * 25 * 64])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
 keep_prob = tf.placeholder("float")
@@ -83,12 +87,12 @@ cfg.allow_soft_placement = True
 A = trd()
 a = A.get_all_train_data_list()
 al = len(a)
-al = al // 50
+al = al // BATCH_SIZE
 
 with tf.Session(config=cfg) as sess:
     sess.run(tf.global_variables_initializer())
     for i in range(al):
-        batch = A.get_batch_data(a, 50)
+        batch = A.get_batch_data(a, BATCH_SIZE)
         if i % 100 == 0:
             train_accuracy = accuracy.eval(feed_dict={
                 x: batch[0], y_: batch[1], keep_prob: 1.0})
@@ -96,6 +100,6 @@ with tf.Session(config=cfg) as sess:
         train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
     saver.save(sess, 'SAVE2/model.ckpt')  # 模型储存位置
 
-    # print('test accuracy %g' % accuracy.eval(feed_dict={
-    # x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
+    print('test accuracy %g' % accuracy.eval(feed_dict={
+        x: batch[0], y_: batch[1], keep_prob: 1.0}))
 print(len(a))
