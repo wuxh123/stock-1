@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-24 09:15:34
+#  Last Modified:  2019-09-24 14:35:30
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -88,14 +88,26 @@ class train_data:
         print("batch[0][0]: ", len(batch[0][0]), type(batch[0][0]), batch[0][0].shape)
         print("batch[1][0]: ", len(batch[1][0]), type(batch[1][0]), batch[1][0].shape)
 
-    def test2(self):
+    def get_stock_daily_train_data(self):
+        df = self.sd.get_index_daily_sh_for_test()
+        df = df.drop(['change'], axis=1)
+        df = df.drop(['ts_code'], axis=1)
+        print(df)
+
+    def get_stock_daily_test_data(self):
         pass
+
+    def get_stock_daily_predict_data(self):
+        pass
+
+    def test2(self):
+        self.get_stock_daily_train_data()
 
 
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
-    a.test()
+    a.test2()
     # dl = a.get_all_train_data_list()
     # c = a.get_batch_data(dl, 5)
     # d = a.get_batch_data(dl, 5)

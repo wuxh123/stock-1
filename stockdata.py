@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-24 14:25:59
+#  Last Modified:  2019-09-24 15:09:39
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -52,8 +52,7 @@ class stockdata:
         print("save: ", 'stock_basic ok')
 
     def get_stock_basics(self):
-        df = pickle.loads(zlib.decompress(self.original.get('stock_basic')))
-        return df
+        return pickle.loads(zlib.decompress(self.original.get('stock_basic')))
 
     def download_trade_cal_list(self):
         todaydate = self.get_today_date()
@@ -63,9 +62,8 @@ class stockdata:
         df = df.reset_index(drop=True)
         self.original.set('trade_cal', zlib.compress(pickle.dumps(df), 5))
         print("save: ", 'trade_cal ok')
-        return df
 
-    def get_trade_cal_list(self, st_date='20130101'):
+    def get_trade_cal_list(self, st_date='20000101'):
         cal = pickle.loads(zlib.decompress(self.original.get('trade_cal')))
         cal = cal[cal >= st_date]
         cal = cal.reset_index(drop=True)
@@ -117,31 +115,24 @@ class stockdata:
         return ret
 
     # 000001.SH 399001.SZ 399006.SZ
-    def download_index_daily(self, code, date):
-        re = self.original.hexists(date, code)
-        if re == 0:
-            data = self.pro.index_daily(ts_code=code, trade_date=date)
-            time.sleep(0.6)
-            if data.empty is False:
-                self.original.hset(date, code, zlib.compress(pickle.dumps(data), 5))
-                print("save: ", date, code, " ok")
-            else:
-                print("save: ", date, code, " error")
+    def download_index_daily(self, code):
+        df = self.pro.index_daily(ts_code=code, start_date='20000101')
+        self.original.set(code, zlib.compress(pickle.dumps(df), 5))
+        print("save: ", code, ': ok')
 
-    def download_index_daily_all(self, date):
-        self.download_index_daily('000001.SH', date)
-        self.download_index_daily('399001.SZ', date)
-        if date >= "20100601":
-            self.download_index_daily('399006.SZ', date)
+    def get_index_daily_sh(self):
+        return pickle.loads(zlib.decompress(self.original.get('000001.SH')))
 
-    def get_index_daily_all(self, date):
-        d1 = pickle.loads(zlib.decompress(self.original.hget(date, '000001.SH')))
-        d2 = pickle.loads(zlib.decompress(self.original.hget(date, '399001.SZ')))
-        d3 = pickle.loads(zlib.decompress(self.original.hget(date, '399006.SZ')))
-        d1 = d1.append([d2, d3])
-        d1 = d1.reset_index(drop=True)
-        # print(d1)
-        return d1
+    def get_index_daily_sz(self):
+        return pickle.loads(zlib.decompress(self.original.get('399001.SZ')))
+
+    def get_index_daily_cyb(self):
+        return pickle.loads(zlib.decompress(self.original.get('399006.SZ')))
+
+    def download_index_daily_all(self):
+        self.download_index_daily('000001.SH')
+        self.download_index_daily('399001.SZ')
+        self.download_index_daily('399006.SZ')
 
     def download_top_list(self, date):
         self.check_exists_and_save(self.original, self.pro.top_list, date, 'top_list')
@@ -235,7 +226,6 @@ class stockdata:
         print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
         for d in ds_date:
             self.download_stk_limit(d)
-            self.download_index_daily_all(d)
             self.download_top_list(d)
             self.download_top_inst(d)
             self.download_daily(d)
@@ -377,6 +367,7 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'd1':
             A.download_stock_basic()
             A.download_trade_cal_list()
+            A.download_index_daily_all()
             A.download_all_data()
             A.gen_latest_data_for_predictor()
         # download other
@@ -395,13 +386,12 @@ if __name__ == '__main__':
         # A.handle_date_training_data_save('20170103')
         # a = A.get_stock_list_date_n('600818.SH', '20190918')
         # a = A.get_train_data_df("20170822", "002600.SZ")
-        a = A.get_index_daily_sh_for_test()
+        a = A.get_index_daily_cyb()
         # A.expand_date_daily("20190916")
         # a = pickle.loads(zlib.decompress(A.expand.hget("20180919", "600818.SH")))
         print(a)
         # a = A.get_date_up_limit_num('20190919')
         # print(d, d.shape[0])
-        # A.get_index_daily_all('20170105')
         # d = A.get_stock_basics()
         # print(d)
     print("Time taken:", datetime.datetime.now() - startTime)
