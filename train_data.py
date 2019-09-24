@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-24 15:59:36
+#  Last Modified:  2019-09-24 16:33:09
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -15,6 +15,7 @@
 
 import datetime
 import numpy as np
+import pandas as pd
 from stockdata import stockdata
 import matplotlib.pyplot as plt
 
@@ -24,15 +25,28 @@ class train_data:
         self.sd = stockdata()
         self.i = 0
         self.df_sh = self.get_stock_daily_train_df()
+        self.ninput = 0
+        self.tinput = 0
 
-    def make_a_predictor_x_data_from_df(self, df):
-        df = df.tail(40)
-        df = df.drop(['change'], axis=1)
+    def make_a_predictor_x_data_from_df(self, dsf):
+        dsf = dsf.tail(40)
+        dsf = dsf.drop(['change'], axis=1)
+
+        dif = self.sd.get_index_daily_sh()
+        dif = dif.drop(['change', 'ts_code'], axis=1)
+
+        df = pd.merge(dsf, dif, on='trade_date')
+
         df['trade_date'] = df.trade_date.apply(lambda x: float(x))
         df['ts_code'] = df.ts_code.apply(lambda x: float(x[:-3]))
         df = df.reset_index(drop=True)
+        print(df.shape)
+
+        self.ninput = df.shape[1]
+        self.tinput = df.shape[0]
+
         df = np.array(df)
-        df = df.reshape(400)
+        df = df.reshape(self.ninput * self.tinput)
         b = df
         # b = np.pad(df, ((0, 384)), 'constant')
         return b
@@ -40,7 +54,7 @@ class train_data:
     def make_train_data_from_df(self, df):
         dn = df.tail(1)
         _x = self.make_a_predictor_x_data_from_df(df)
-        _y = dn['pct_chg'].iat[0]
+        _y = dn['pct_chg_x'].iat[0]
         # -10-> 10 转化为 0-9
         _y = _y + 10.005
         _y = int(round(_y, 0))
@@ -49,7 +63,7 @@ class train_data:
         x = _x
 
         # x = x.reshape(1, 784)
-        x = x.reshape(1, 400)
+        x = x.reshape(1, self.ninput * self.tinput)
         y = y.reshape(1, 21)
 
         return (x, y)
@@ -119,7 +133,9 @@ class train_data:
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
-    a.test2()
+    d = a.sd.get_train_data_df('20190923', '002354.SZ')
+    a.make_a_predictor_x_data_from_df(d)
+    # a.test2()
     # dl = a.get_all_train_data_list()
     # c = a.get_batch_data(dl, 5)
     # d = a.get_batch_data(dl, 5)
