@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-25 23:39:03
+#  Last Modified:  2019-09-25 23:46:16
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -219,7 +219,6 @@ class stockdata:
                     self.original.hdel(d, fs)
 
     # ********************************************************************
-    # 下载数据
     # 下载时间短的
     def download_all_data(self):
         ds_date = self.get_trade_cal_list("20080101")
@@ -252,30 +251,21 @@ if __name__ == '__main__':
     startTime = datetime.datetime.now()
     A = stockdata()
     if len(sys.argv) > 1:
-        # check data del empty
         if sys.argv[1] == 'c':
             A.check_all_download_data()
-        # download index_daily top stk daily
         elif sys.argv[1] == 'd1':
             A.download_stock_basic()
             A.download_trade_cal_list()
             A.download_index_daily_all()
             A.download_all_data()
-        # download other
         elif sys.argv[1] == 'd2':
             A.download_all_data2_save()
-        # handle training data
-        elif sys.argv[1] == 'h':
-            pass
     else:
         d = "Test: ................."
         # d = A.get_trade_cal_list()
-        # a = A.get_index_daily_cyb()
         # a = A.get_index_daily_sh()
         # A.download_all_date_up_limit_history_data()
         # A.download_date_up_limit_history_data('20190925')
         a = A.get_date_up_limit_ts_code_df('20190823')
         print(a)
-        # d = A.get_stock_basics()
-        # print(d)
     print("Time taken:", datetime.datetime.now() - startTime)
