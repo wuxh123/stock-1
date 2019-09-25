@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-25 23:18:40
+#  Last Modified:  2019-09-25 23:39:03
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -176,11 +176,16 @@ class stockdata:
                 print("save: ", date, 'up_limit_list', " ok")
 
     def get_date_up_limit_ts_code_df(self, date):
-        return pickle.loads(zlib.decompress(self.original.hget(date, 'up_limit_list')))
+        if self.original.hexists(date, "up_limit_list") == 1:
+            return pickle.loads(zlib.decompress(self.original.hget(date, 'up_limit_list')))
+        return pd.DataFrame()
 
     def download_date_up_limit_history_data(self, date):
         ld = self.original.get('latest_date')
-        if date < ld.decode():
+        if date <= ld.decode():
+            return
+
+        if self.original.hexists(date, 'daily') == 0:
             return
 
         td = self.get_today_date()
@@ -218,16 +223,19 @@ class stockdata:
     # 下载时间短的
     def download_all_data(self):
         ds_date = self.get_trade_cal_list("20080101")
-        print("start_date: ", ds_date[0], "end_date: ", ds_date[ds_date.shape[0] - 1])
+        end_date = ds_date[ds_date.shape[0] - 1]
+        print("start_date: ", ds_date[0], "end_date: ", end_date)
         for d in ds_date:
             self.download_stk_limit(d)
+            self.download_daily(d)
             self.download_top_list(d)
             self.download_top_inst(d)
-            self.download_daily(d)
             self.download_block_trade(d)
             self.save_date_up_limit_ts_code_df(d)
             self.download_date_up_limit_history_data(d)
-        self.original.set("latest_date", ds_date[ds_date.shape[0] - 1])
+
+        if self.original.hexists(end_date, 'daily') == 1:
+            self.original.set("latest_date", end_date)
 
     # 时间长的单独下载
     def download_all_data2_save(self):
@@ -263,11 +271,11 @@ if __name__ == '__main__':
         d = "Test: ................."
         # d = A.get_trade_cal_list()
         # a = A.get_index_daily_cyb()
-        # A.download_all_date_up_limit_history_data()
-        A.download_date_up_limit_history_data('20190925')
         # a = A.get_index_daily_sh()
-        # a = A.get_date_up_limit_ts_code_df('20190925')
-        # print(a)
+        # A.download_all_date_up_limit_history_data()
+        # A.download_date_up_limit_history_data('20190925')
+        a = A.get_date_up_limit_ts_code_df('20190823')
+        print(a)
         # d = A.get_stock_basics()
         # print(d)
     print("Time taken:", datetime.datetime.now() - startTime)
