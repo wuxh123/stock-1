@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-26 09:51:27
-#  Last Modified:  2019-09-26 10:43:56
+#  Last Modified:  2019-09-26 11:06:51
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -25,6 +25,7 @@ dfsh = td.test()
 df = dfsh
 data = np.array(df['close'])
 data = data[::-1]
+data = data[:100]
 # plt.figure()
 # plt.plot(data)
 # plt.show()
@@ -126,9 +127,8 @@ def train_lstm():
         print("保存模型：", saver.save(sess, './SAVE3/stock.model'))
 
 
-train_lstm()
+# train_lstm()
 
-'''
 def prediction():
     # 预测时只输入[1,time_step,input_size]的测试数据
     pred, _ = lstm(1)
@@ -142,7 +142,7 @@ def prediction():
         prev_seq = train_x[-1]
         predict = []
         # 得到之后100个预测结果
-        for i in range(100):
+        for i in range(20):
             next_seq = sess.run(pred, feed_dict={X: [prev_seq]})
             predict.append(next_seq[-1])
             # 每次得到最后一个时间步的预测结果，与之前的数据加在一起，形成新的测试样本
@@ -156,4 +156,3 @@ def prediction():
 
 
 prediction()
-'''

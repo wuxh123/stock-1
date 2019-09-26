@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-25 10:08:57
+#  Last Modified:  2019-09-26 14:45:18
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -18,24 +18,30 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 from train_data import train_data as trd
 
-# 训练参数
-learning_rate = 0.001  # 学习率
-batch_size = 25  # 批量大小
+# 学习率
+learning_rate = 0.001
+# 批量大小
 display_step = 50
 
 A = trd()
-a = A.get_all_train_data_list()
-al = len(a)
-al = al // batch_size
+# a = A.get_all_train_data_list()
 
+# al = len(a)
+batch_size = A.batch_size
+
+# al = al // batch_size
 
 # 网络参数
-num_input = 18  # 每行多少个数据
-timesteps = 40  # 多少个时间序列
+# num_input = 18  # 每行多少个数据
+num_input = A.num_input
+# timesteps = 40  # 多少个时间序列
+timesteps = A.timesteps
 num_hidden = 128  # 隐藏层神经元数
-num_classes = 21  # 数据集类别数
+# num_classes = 21  # 数据集类别数
+num_classes = A.num_classes
+print(num_input, timesteps, num_classes)
 
-
+'''
 # 定义输入
 X = tf.placeholder("float", [None, timesteps, num_input])
 Y = tf.placeholder("float", [None, num_classes])
@@ -118,3 +124,4 @@ with tf.Session(config=cfg) as sess:
     # test_label = mnist.test.labels[:test_len]
     # print("Testing Accuracy:", sess.run(
     # accuracy, feed_dict={X: test_data, Y: test_label}))
+'''
