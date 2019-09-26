@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-26 15:36:06
+#  Last Modified:  2019-09-26 15:38:10
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -21,13 +21,14 @@ from train_data import train_data as trd
 # 学习率
 learning_rate = 0.001
 # 批量大小
-display_step = 50
+display_step = 5
 
 A = trd()
 d = A.test()
 
 batch_size = A.batch_size
-al = len(d) / batch_size
+al = int(len(d) / batch_size)
+print(al)
 
 # 网络参数
 num_input = A.num_input
