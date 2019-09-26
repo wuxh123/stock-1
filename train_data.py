@@ -6,13 +6,14 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-26 17:25:36
+#  Last Modified:  2019-09-26 23:17:59
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
 #   Organization:
 
 import datetime
+import math
 import numpy as np
 import pandas as pd
 from stockdata import stockdata
@@ -34,8 +35,9 @@ class train_data:
     def make_a_train_data_from_df(self, dfx, y):
         xn = np.array(dfx)
         xn = xn.reshape(1, self.num_input * self.timesteps)
-        _y = int(round(y + 10.005, 0))
+
         yn = np.zeros(self.num_classes)
+        _y = int(math.floor(y * self.num_classes / 20.0 + self.num_classes / 2.0 - 0.1))
         yn[_y] = 1
         yn = yn.reshape(1, self.num_classes)
         return (xn, yn)
@@ -47,8 +49,8 @@ class train_data:
             return lt
 
         # 条件删除
-        df['pct_chg'] = df.pct_chg.apply(lambda x: 10.0 if x > 10.0 else x)
-        df['pct_chg'] = df.pct_chg.apply(lambda x: -10.0 if x < -10.0 else x)
+        df['pct_chg'] = df.pct_chg.apply(lambda x: 10.0 if x > 9.5 else x)
+        df['pct_chg'] = df.pct_chg.apply(lambda x: -10.0 if x < -9.5 else x)
 
         df = df[::-1]
 
@@ -111,7 +113,7 @@ class train_data:
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
-    d = a.test()
+    # d = a.test()
     # c = a.get_batch_data_from_list(d, 100)
     # print(c)
     # print(type(c))

@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-26 16:55:51
+#  Last Modified:  2019-09-26 23:04:28
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -26,9 +26,6 @@ display_step = 20
 A = trd()
 
 batch_size = A.batch_size
-# al = int(len(d) / batch_size)
-# print(al)
-
 # 网络参数
 num_input = A.num_input
 timesteps = A.timesteps
@@ -41,7 +38,7 @@ X = tf.placeholder("float", [None, timesteps, num_input])
 Y = tf.placeholder("float", [None, num_classes])
 
 # 定义权重和偏置
-# weights矩阵[128, 10]
+# weights矩阵[num_hidden, num_classes]
 weights = {'out': tf.Variable(tf.random_normal([num_hidden, num_classes]))}
 biases = {'out': tf.Variable(tf.random_normal([num_classes]))}
 
@@ -99,7 +96,7 @@ saver = tf.train.Saver()  # 定义saver
 # Start training
 with tf.Session(config=cfg) as sess:
     sess.run(init)
-    saver.restore(sess, "zt/model.ckpt")
+    # saver.restore(sess, "zt/model.ckpt")
 
     ll = A.sd.get_all_code()
     ll.sort()
