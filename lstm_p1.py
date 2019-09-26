@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-26 09:51:27
-#  Last Modified:  2019-09-26 10:04:06
+#  Last Modified:  2019-09-26 10:24:45
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -25,24 +25,23 @@ dfsh = td.test()
 df = dfsh
 data = np.array(df['close'])
 data = data[::-1]
-plt.figure()
-plt.plot(data)
-plt.show()
+# plt.figure()
+# plt.plot(data)
+# plt.show()
 
 # 标准化
 normalize_data = (data - np.mean(data)) / np.std(data)
 # 增加维度
 normalize_data = normalize_data[:, np.newaxis]
 
-
-# 时间步
-time_step = 20
+# 每一批次训练多少个样例
+batch_size = 60
 
 # hidden layer units
 rnn_unit = 10
 
-# 每一批次训练多少个样例
-batch_size = 60
+# 时间步 多少行
+time_step = 20
 
 # 输入层维度
 input_size = 1
@@ -107,8 +106,7 @@ def train_lstm():
     saver = tf.train.Saver(tf.global_variables())
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        # 重复训练10000次
-        for i in range(10000):
+        for i in range(500):
             step = 0
             start = 0
             end = start + batch_size
@@ -117,23 +115,22 @@ def train_lstm():
                                     X: train_x[start:end], Y: train_y[start:end]})
                 start += batch_size
                 end = start + batch_size
-                # 每10步保存一次参数
-                if step % 10 == 0:
+                if step % 1000 == 0:
                     print(i, step, loss_)
-                    print("保存模型：", saver.save(sess, 'stock.model'))
+                    print("保存模型：", saver.save(sess, './SAVE3/stock.model'))
                 step += 1
 
 
 train_lstm()
 
-
+'''
 def prediction():
     # 预测时只输入[1,time_step,input_size]的测试数据
     pred, _ = lstm(1)
     saver = tf.train.Saver(tf.global_variables())
     with tf.Session() as sess:
         # 参数恢复
-        module_file = tf.train.latest_checkpoint(base_path + 'module2/')
+        module_file = tf.train.latest_checkpoint('./SAVE3')
         saver.restore(sess, module_file)
 
         # 取训练集最后一行为测试样本。shape=[1,time_step,input_size]
@@ -154,3 +151,4 @@ def prediction():
 
 
 prediction()
+'''
