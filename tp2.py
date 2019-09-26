@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-26 15:38:10
+#  Last Modified:  2019-09-26 15:51:03
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -33,7 +33,8 @@ print(al)
 # 网络参数
 num_input = A.num_input
 timesteps = A.timesteps
-num_hidden = 128  # 隐藏层神经元数
+# 隐藏层神经元数
+num_hidden = 256
 num_classes = A.num_classes
 
 # 定义输入
@@ -62,7 +63,7 @@ def LSTM(x, weights, biases):
 
     # 定义一个lstm cell，即上面图示LSTM中的A
     # n_hidden表示神经元的个数，forget_bias就是LSTM们的忘记系数，如果等于1，就是不会忘记任何信息。如果等于0，就都忘记。
-    lstm_cell = rnn.BasicLSTMCell(num_hidden, forget_bias=0.9)
+    lstm_cell = rnn.BasicLSTMCell(num_hidden, forget_bias=0.95)
 
     # 得到 lstm cell 输出
     # 输出output和states
@@ -94,13 +95,13 @@ init = tf.global_variables_initializer()
 cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
 cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
 cfg.allow_soft_placement = True
-
+saver = tf.train.Saver()  # 定义saver
 
 # Start training
-# with tf.Session() as sess:
 with tf.Session(config=cfg) as sess:
     sess.run(init)
 
+    saver.restore(sess, "zt/model.ckpt")
     for step in range(al):
         batch_x, batch_y = A.get_batch_data_from_list(d, step)
         batch_x = batch_x.reshape((batch_size, timesteps, num_input))
@@ -111,6 +112,7 @@ with tf.Session(config=cfg) as sess:
             print("Step " + str(step) + ", Minibatch Loss= " + "{:.4f}".format(loss) + ", Training Accuracy= " + "{:.3f}".format(acc))
 
     print("Optimization Finished!")
+    saver.save(sess, 'zt/model.ckpt')  # 模型储存位置
 
     # Calculate accuracy for 128 mnist test images
     # test_len = 128
