@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-26 08:17:28
+#  Last Modified:  2019-09-26 09:58:21
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -33,7 +33,7 @@ class train_data:
         pass
 
     def test(self):
-        print("test")
+        return self.sd.get_index_daily_sh()
 
 
 if __name__ == '__main__':

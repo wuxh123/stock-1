@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-26 09:12:48
+#  Last Modified:  2019-09-26 09:26:35
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -201,7 +201,7 @@ class stockdata:
             return pickle.loads(zlib.decompress(self.original.get(code)))
         return pd.DataFrame()
 
-    def get_date_up_limit_data(self, date):
+    def get_date_up_limit_data_df_list(self, date):
         dl = self.get_date_up_limit_ts_code_df(date).values.tolist()
         lc = []
         if len(dl) == 0:
@@ -281,7 +281,7 @@ if __name__ == '__main__':
         # d = A.get_trade_cal_list()
         # a = A.get_data_by_code('600818.SH')
         # a = A.get_date_up_limit_ts_code_df('20190925')
-        A.get_date_up_limit_data('20190924')
+        A.get_date_up_limit_data_df_list('20190924')
         # A.download_all_date_up_limit_history_data()
         # A.download_date_up_limit_history_data('20190925')
         # print(a)
