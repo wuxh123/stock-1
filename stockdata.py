@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-25 23:46:16
+#  Last Modified:  2019-09-26 09:12:48
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -196,6 +196,22 @@ class stockdata:
                 self.original.set(c, zlib.compress(pickle.dumps(data), 5))
                 print("save: ", date, c, 'up_limit_list daily', " ok")
 
+    def get_data_by_code(self, code):
+        if self.original.exists(code) == 1:
+            return pickle.loads(zlib.decompress(self.original.get(code)))
+        return pd.DataFrame()
+
+    def get_date_up_limit_data(self, date):
+        dl = self.get_date_up_limit_ts_code_df(date).values.tolist()
+        lc = []
+        if len(dl) == 0:
+            return lc
+
+        for c in dl:
+            pass
+
+        return lc
+
     '''
     def download_all_date_up_limit_history_data(self):
         ds_date = self.get_trade_cal_list('20090101')
@@ -263,9 +279,10 @@ if __name__ == '__main__':
     else:
         d = "Test: ................."
         # d = A.get_trade_cal_list()
-        # a = A.get_index_daily_sh()
+        # a = A.get_data_by_code('600818.SH')
+        # a = A.get_date_up_limit_ts_code_df('20190925')
+        A.get_date_up_limit_data('20190924')
         # A.download_all_date_up_limit_history_data()
         # A.download_date_up_limit_history_data('20190925')
-        a = A.get_date_up_limit_ts_code_df('20190823')
-        print(a)
+        # print(a)
     print("Time taken:", datetime.datetime.now() - startTime)
