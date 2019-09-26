@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-26 16:24:14
+#  Last Modified:  2019-09-26 16:55:51
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -102,6 +102,7 @@ with tf.Session(config=cfg) as sess:
     saver.restore(sess, "zt/model.ckpt")
 
     ll = A.sd.get_all_code()
+    ll.sort()
     for c in ll:
         d = A.sd.get_data_by_code(c)
         df = A.calc_train_data_list_from_df(d)
@@ -116,8 +117,7 @@ with tf.Session(config=cfg) as sess:
             if step % display_step == 0 or step == 1:
                 # Calculate batch loss and accuracy
                 loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
-                print("Step", step, "batch Loss=" +
-                      "{: .4f}".format(loss) + ", Accuracy=" + "{: .3f}".format(acc))
+                print(step, "Loss=" + "{: .4f}".format(loss) + ", Accuracy=" + "{: .3f}".format(acc))
 
         print(c, " Optimization Finished!")
         saver.save(sess, 'zt/model.ckpt')  # 模型储存位置

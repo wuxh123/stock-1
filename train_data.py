@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-26 16:22:30
+#  Last Modified:  2019-09-26 16:56:12
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -35,10 +35,12 @@ class train_data:
         xn = np.array(dfx)
         xn = xn.reshape(1, self.num_input * self.timesteps)
         _y = int(round(y + 10.005, 0))
+        '''
         if _y >= 10:
             _y = 10
         if _y <= -10:
             _y = -10
+        '''
 
         yn = np.zeros(self.num_classes)
         yn[_y] = 1
