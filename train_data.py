@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-26 16:57:48
+#  Last Modified:  2019-09-26 17:25:36
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -35,11 +35,6 @@ class train_data:
         xn = np.array(dfx)
         xn = xn.reshape(1, self.num_input * self.timesteps)
         _y = int(round(y + 10.005, 0))
-        if _y >= 10:
-            _y = 10
-        if _y <= -10:
-            _y = -10
-
         yn = np.zeros(self.num_classes)
         yn[_y] = 1
         yn = yn.reshape(1, self.num_classes)
@@ -50,6 +45,10 @@ class train_data:
         min_len = self.timesteps + self.batch_size + 1
         if df.shape[0] < min_len:
             return lt
+
+        # 条件删除
+        df['pct_chg'] = df.pct_chg.apply(lambda x: 10.0 if x > 10.0 else x)
+        df['pct_chg'] = df.pct_chg.apply(lambda x: -10.0 if x < -10.0 else x)
 
         df = df[::-1]
 
@@ -104,6 +103,7 @@ class train_data:
         for c in ll:
             d = self.sd.get_data_by_code(c)
             df = self.calc_train_data_list_from_df(d)
+            print(c)
             if df is None:
                 pass
 
