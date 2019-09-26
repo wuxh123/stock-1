@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-26 16:08:21
+#  Last Modified:  2019-09-26 16:22:05
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -104,19 +104,21 @@ with tf.Session(config=cfg) as sess:
 
     ll = A.sd.get_all_code()
     for c in ll:
-        d = A.get_batch_data_from_list(c)
-        if d is None:
+        d = A.sd.get_data_by_code(c)
+        df = A.calc_train_data_list_from_df(d)
+        if df is None:
             continue
 
-        al = int(len(d) / batch_size)
+        al = int(len(df) / batch_size)
         for step in range(al):
-            batch_x, batch_y = A.get_batch_data_from_list(d, step)
+            batch_x, batch_y = A.get_batch_data_from_list(df, step)
             batch_x = batch_x.reshape((batch_size, timesteps, num_input))
             sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
             if step % display_step == 0 or step == 1:
                 # Calculate batch loss and accuracy
                 loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
-                print("Step " + str(step) + ", Minibatch Loss= " + "{:.4f}".format(loss) + ", Training Accuracy= " + "{:.3f}".format(acc))
+                print(c, "Step", step, "batch Loss=" +
+                      "{: .4f}".format(loss) + ", Accuracy=" + "{: .3f}".format(acc))
 
         print(c, " Optimization Finished!")
         saver.save(sess, 'zt/model.ckpt')  # 模型储存位置

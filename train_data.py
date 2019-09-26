@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-26 15:54:10
+#  Last Modified:  2019-09-26 16:22:30
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -35,6 +35,11 @@ class train_data:
         xn = np.array(dfx)
         xn = xn.reshape(1, self.num_input * self.timesteps)
         _y = int(round(y + 10.005, 0))
+        if _y >= 10:
+            _y = 10
+        if _y <= -10:
+            _y = -10
+
         yn = np.zeros(self.num_classes)
         yn[_y] = 1
         yn = yn.reshape(1, self.num_classes)
@@ -95,18 +100,21 @@ class train_data:
         pass
 
     def test(self):
-        df = self.sd.get_data_by_code('600818.SH')
-        ll = self.calc_train_data_list_from_df(df)
-        return ll
+        ll = self.sd.get_all_code()
+        for c in ll:
+            d = self.sd.get_data_by_code(c)
+            df = self.calc_train_data_list_from_df(d)
+            if df is None:
+                pass
 
 
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
     d = a.test()
-    c = a.get_batch_data_from_list(d, 100)
-    print(c)
-    print(type(c))
+    # c = a.get_batch_data_from_list(d, 100)
+    # print(c)
+    # print(type(c))
     # print(a.calc_delta_days("20190926", "20190821"))
 
     print("Time taken:", datetime.datetime.now() - startTime)
