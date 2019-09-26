@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-26 14:45:18
+#  Last Modified:  2019-09-26 15:36:06
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -24,24 +24,17 @@ learning_rate = 0.001
 display_step = 50
 
 A = trd()
-# a = A.get_all_train_data_list()
+d = A.test()
 
-# al = len(a)
 batch_size = A.batch_size
-
-# al = al // batch_size
+al = len(d) / batch_size
 
 # 网络参数
-# num_input = 18  # 每行多少个数据
 num_input = A.num_input
-# timesteps = 40  # 多少个时间序列
 timesteps = A.timesteps
 num_hidden = 128  # 隐藏层神经元数
-# num_classes = 21  # 数据集类别数
 num_classes = A.num_classes
-print(num_input, timesteps, num_classes)
 
-'''
 # 定义输入
 X = tf.placeholder("float", [None, timesteps, num_input])
 Y = tf.placeholder("float", [None, num_classes])
@@ -108,7 +101,7 @@ with tf.Session(config=cfg) as sess:
     sess.run(init)
 
     for step in range(al):
-        batch_x, batch_y = A.get_batch_data(a, batch_size)
+        batch_x, batch_y = A.get_batch_data_from_list(d, step)
         batch_x = batch_x.reshape((batch_size, timesteps, num_input))
         sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
         if step % display_step == 0 or step == 1:
@@ -124,4 +117,3 @@ with tf.Session(config=cfg) as sess:
     # test_label = mnist.test.labels[:test_len]
     # print("Testing Accuracy:", sess.run(
     # accuracy, feed_dict={X: test_data, Y: test_label}))
-'''

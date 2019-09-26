@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-26 15:15:01
+#  Last Modified:  2019-09-26 15:34:22
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -26,6 +26,7 @@ class train_data:
         self.timesteps = 40     # 多少个时间序列 (多少行)
         self.num_classes = 21   # 数据集类别数
         self.test_size = 5      # 留多少数据用于测试
+        self.i = 0
 
     def calc_delta_days(self, d1, d2):
         d = (datetime.datetime.strptime(d1, "%Y%m%d") - datetime.datetime.strptime(d2, "%Y%m%d")).days
@@ -40,7 +41,7 @@ class train_data:
         yn = yn.reshape(1, self.num_classes)
         return (xn, yn)
 
-    def get_train_data_from_df(self, df):
+    def calc_train_data_list_from_df(self, df):
         lt = []
         min_len = self.timesteps + self.batch_size + 1
         if df.shape[0] < min_len:
@@ -70,13 +71,21 @@ class train_data:
 
         df = df.drop(['td2'], axis=1)
 
-        for i in range(cnt - self.test_size - self.timesteps):
+        for i in range(cnt - 1 - self.timesteps):
             dfx = df[i: i + self.timesteps]
             y = df['pct_chg_x'].iat[i + self.timesteps]
             xn, yn = self.make_a_train_data_from_df(dfx, y)
             lt.append((xn, yn))
 
         return lt
+
+    def get_batch_data_from_list(self, ll, n):
+        xt, yt = ll[n * self.batch_size]
+        for i in range(1, self.batch_size):
+            x, y = ll[i]
+            xt = np.vstack([xt, x])
+            yt = np.vstack([yt, y])
+        return (xt, yt)
 
     def get_test_data_df(self):
         pass
@@ -85,15 +94,18 @@ class train_data:
         pass
 
     def test(self):
-        # return self.sd.get_index_daily_sh()
-        return self.sd.get_data_by_code('600818.SH')
+        df = self.sd.get_data_by_code('600818.SH')
+        ll = self.calc_train_data_list_from_df(df)
+        return ll
 
 
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
     d = a.test()
-    a.get_train_data_from_df(d)
+    c = a.get_batch_data_from_list(d, 100)
+    print(c)
+    print(type(c))
     # print(a.calc_delta_days("20190926", "20190821"))
 
     print("Time taken:", datetime.datetime.now() - startTime)
