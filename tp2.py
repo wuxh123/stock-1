@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-26 16:22:05
+#  Last Modified:  2019-09-26 16:24:14
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -21,10 +21,9 @@ from train_data import train_data as trd
 # 学习率
 learning_rate = 0.001
 # 批量大小
-display_step = 5
+display_step = 20
 
 A = trd()
-# d = A.test()
 
 batch_size = A.batch_size
 # al = int(len(d) / batch_size)
@@ -117,7 +116,7 @@ with tf.Session(config=cfg) as sess:
             if step % display_step == 0 or step == 1:
                 # Calculate batch loss and accuracy
                 loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
-                print(c, "Step", step, "batch Loss=" +
+                print("Step", step, "batch Loss=" +
                       "{: .4f}".format(loss) + ", Accuracy=" + "{: .3f}".format(acc))
 
         print(c, " Optimization Finished!")
