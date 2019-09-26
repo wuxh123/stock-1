@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-26 09:51:27
-#  Last Modified:  2019-09-26 10:24:45
+#  Last Modified:  2019-09-26 10:43:56
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -97,6 +97,11 @@ def lstm(batch):
     return pred, final_states
 
 
+cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
+cfg.allow_soft_placement = True
+
+
 def train_lstm():
     global batch_size
     pred, _ = lstm(batch_size)
@@ -104,9 +109,9 @@ def train_lstm():
     loss = tf.reduce_mean(tf.square(tf.reshape(pred, [-1]) - tf.reshape(Y, [-1])))
     train_op = tf.train.AdamOptimizer(lr).minimize(loss)
     saver = tf.train.Saver(tf.global_variables())
-    with tf.Session() as sess:
+    with tf.Session(config=cfg) as sess:
         sess.run(tf.global_variables_initializer())
-        for i in range(500):
+        for i in range(1000):
             step = 0
             start = 0
             end = start + batch_size
@@ -117,8 +122,8 @@ def train_lstm():
                 end = start + batch_size
                 if step % 1000 == 0:
                     print(i, step, loss_)
-                    print("保存模型：", saver.save(sess, './SAVE3/stock.model'))
                 step += 1
+        print("保存模型：", saver.save(sess, './SAVE3/stock.model'))
 
 
 train_lstm()

@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-24 16:45:11
+#  Last Modified:  2019-09-25 10:08:57
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -32,7 +32,7 @@ al = al // batch_size
 # 网络参数
 num_input = 18  # 每行多少个数据
 timesteps = 40  # 多少个时间序列
-num_hidden = 64  # 隐藏层神经元数
+num_hidden = 128  # 隐藏层神经元数
 num_classes = 21  # 数据集类别数
 
 
@@ -62,7 +62,7 @@ def LSTM(x, weights, biases):
 
     # 定义一个lstm cell，即上面图示LSTM中的A
     # n_hidden表示神经元的个数，forget_bias就是LSTM们的忘记系数，如果等于1，就是不会忘记任何信息。如果等于0，就都忘记。
-    lstm_cell = rnn.BasicLSTMCell(num_hidden, forget_bias=1.0)
+    lstm_cell = rnn.BasicLSTMCell(num_hidden, forget_bias=0.9)
 
     # 得到 lstm cell 输出
     # 输出output和states
@@ -91,14 +91,14 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 # 初始化全局变量
 init = tf.global_variables_initializer()
 
-# cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
-# cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
-# cfg.allow_soft_placement = True
+cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
+cfg.allow_soft_placement = True
 
 
 # Start training
-# with tf.Session(config=cfg) as sess:
-with tf.Session() as sess:
+# with tf.Session() as sess:
+with tf.Session(config=cfg) as sess:
     sess.run(init)
 
     for step in range(al):
