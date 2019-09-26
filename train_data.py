@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-26 15:34:22
+#  Last Modified:  2019-09-26 15:54:10
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -26,7 +26,6 @@ class train_data:
         self.timesteps = 40     # 多少个时间序列 (多少行)
         self.num_classes = 21   # 数据集类别数
         self.test_size = 5      # 留多少数据用于测试
-        self.i = 0
 
     def calc_delta_days(self, d1, d2):
         d = (datetime.datetime.strptime(d1, "%Y%m%d") - datetime.datetime.strptime(d2, "%Y%m%d")).days
@@ -80,6 +79,8 @@ class train_data:
         return lt
 
     def get_batch_data_from_list(self, ll, n):
+        if len(ll) == 0:
+            return None
         xt, yt = ll[n * self.batch_size]
         for i in range(1, self.batch_size):
             x, y = ll[i]

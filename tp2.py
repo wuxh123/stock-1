@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-26 15:51:03
+#  Last Modified:  2019-09-26 16:08:21
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -24,11 +24,11 @@ learning_rate = 0.001
 display_step = 5
 
 A = trd()
-d = A.test()
+# d = A.test()
 
 batch_size = A.batch_size
-al = int(len(d) / batch_size)
-print(al)
+# al = int(len(d) / batch_size)
+# print(al)
 
 # 网络参数
 num_input = A.num_input
@@ -100,23 +100,30 @@ saver = tf.train.Saver()  # 定义saver
 # Start training
 with tf.Session(config=cfg) as sess:
     sess.run(init)
-
     saver.restore(sess, "zt/model.ckpt")
-    for step in range(al):
-        batch_x, batch_y = A.get_batch_data_from_list(d, step)
-        batch_x = batch_x.reshape((batch_size, timesteps, num_input))
-        sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
-        if step % display_step == 0 or step == 1:
-            # Calculate batch loss and accuracy
-            loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
-            print("Step " + str(step) + ", Minibatch Loss= " + "{:.4f}".format(loss) + ", Training Accuracy= " + "{:.3f}".format(acc))
 
-    print("Optimization Finished!")
-    saver.save(sess, 'zt/model.ckpt')  # 模型储存位置
+    ll = A.sd.get_all_code()
+    for c in ll:
+        d = A.get_batch_data_from_list(c)
+        if d is None:
+            continue
 
-    # Calculate accuracy for 128 mnist test images
-    # test_len = 128
-    # test_data = mnist.test.images[:test_len].reshape((-1, timesteps, num_input))
-    # test_label = mnist.test.labels[:test_len]
-    # print("Testing Accuracy:", sess.run(
-    # accuracy, feed_dict={X: test_data, Y: test_label}))
+        al = int(len(d) / batch_size)
+        for step in range(al):
+            batch_x, batch_y = A.get_batch_data_from_list(d, step)
+            batch_x = batch_x.reshape((batch_size, timesteps, num_input))
+            sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
+            if step % display_step == 0 or step == 1:
+                # Calculate batch loss and accuracy
+                loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
+                print("Step " + str(step) + ", Minibatch Loss= " + "{:.4f}".format(loss) + ", Training Accuracy= " + "{:.3f}".format(acc))
+
+        print(c, " Optimization Finished!")
+        saver.save(sess, 'zt/model.ckpt')  # 模型储存位置
+
+        # Calculate accuracy for 128 mnist test images
+        # test_len = 128
+        # test_data = mnist.test.images[:test_len].reshape((-1, timesteps, num_input))
+        # test_label = mnist.test.labels[:test_len]
+        # print("Testing Accuracy:", sess.run(
+        # accuracy, feed_dict={X: test_data, Y: test_label}))

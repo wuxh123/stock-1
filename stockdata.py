@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-26 10:44:31
+#  Last Modified:  2019-09-26 16:03:48
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -196,6 +196,10 @@ class stockdata:
                 self.original.set(c, zlib.compress(pickle.dumps(data), 5))
                 print("save: ", date, c, 'up_limit_list daily', " ok")
 
+    def get_all_code(self):
+        ll = self.original.keys("*.*")
+        return ll
+
     def get_data_by_code(self, code):
         if self.original.exists(code) == 1:
             return pickle.loads(zlib.decompress(self.original.get(code)))
@@ -281,7 +285,8 @@ if __name__ == '__main__':
         # d = A.get_trade_cal_list()
         # a = A.get_data_by_code('600818.SH')
         # a = A.get_date_up_limit_ts_code_df('20190925')
-        A.get_date_up_limit_data_df_list('20190924')
+        # A.get_date_up_limit_data_df_list('20190924')
+        A.get_all_code()
         # A.download_all_date_up_limit_history_data()
         # A.download_date_up_limit_history_data('20190925')
         # print(a)
