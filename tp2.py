@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-27 09:55:42
+#  Last Modified:  2019-09-27 14:15:43
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -88,17 +88,21 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 # 初始化全局变量
 init = tf.global_variables_initializer()
 
-cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
-cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
-cfg.allow_soft_placement = True
+# cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+# cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
+# cfg.allow_soft_placement = True
+
 saver = tf.train.Saver()  # 定义saver
 
 # Start training
-with tf.Session(config=cfg) as sess:
+# with tf.Session(config=cfg) as sess:
+with tf.Session() as sess:
     sess.run(init)
     # saver.restore(sess, "zt/model.ckpt")
 
     ll = A.sd.get_all_code()
+    # ll = A.sd.temp.hkeys("test2")
+    # ll = ['600737.SH']
     ll.sort()
     for c in ll:
         d = A.sd.get_data_by_code(c)
@@ -115,8 +119,8 @@ with tf.Session(config=cfg) as sess:
                 loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
                 # print(step, "Loss=" + "{: .4f}".format(loss) + ", Accuracy=" + "{: .3f}".format(acc))
 
-        # print(c, ": ", acc, " Optimization Finished!")
-        if acc > 0.6:
+        print(c, ": ", acc, " Optimization Finished!")
+        if acc > 0.8:
             A.sd.temp.hset("test2", c, str(acc))
             print("save test:", c, acc)
         saver.save(sess, 'zt/model.ckpt')  # 模型储存位置

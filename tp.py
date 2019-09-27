@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-23 16:47:09
+#  Last Modified:  2019-09-27 13:47:14
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -17,10 +17,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from train_data import train_data as trd
 import tensorflow as tf
 
-BATCH_SIZE = 25
+A = trd()
+batch_size = A.batch_size
 
-# x = tf.placeholder(tf.float32, [None, 784])
-x = tf.placeholder(tf.float32, [None, 400])
+
+x = tf.placeholder(tf.float32, [None, 784])
 y_ = tf.placeholder(tf.float32, [None, 10])
 
 
@@ -45,8 +46,7 @@ def max_pool_2x2(x):
 W_conv1 = weight_variable([5, 5, 1, 32])
 b_conv1 = bias_variable([32])
 
-# x_image = tf.reshape(x, [-1, 28, 28, 1])
-x_image = tf.reshape(x, [-1, 20, 20, 1])
+x_image = tf.reshape(x, [-1, 28, 28, 1])
 
 h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 h_pool1 = max_pool_2x2(h_conv1)
@@ -57,12 +57,10 @@ b_conv2 = bias_variable([64])
 h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
 h_pool2 = max_pool_2x2(h_conv2)
 
-# W_fc1 = weight_variable([7 * 7 * 64, 1024])
-W_fc1 = weight_variable([25 * 25 * 64, 1024])
+W_fc1 = weight_variable([7 * 7 * 64, 1024])
 b_fc1 = bias_variable([1024])
 
-# h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
-h_pool2_flat = tf.reshape(h_pool2, [-1, 25 * 25 * 64])
+h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
 keep_prob = tf.placeholder("float")
@@ -84,22 +82,27 @@ cfg = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
 cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
 cfg.allow_soft_placement = True
 
-A = trd()
-a = A.get_all_train_data_list()
-al = len(a)
-al = al // BATCH_SIZE
-
 with tf.Session(config=cfg) as sess:
     sess.run(tf.global_variables_initializer())
-    for i in range(al):
-        batch = A.get_batch_data(a, BATCH_SIZE)
-        if i % 100 == 0:
-            train_accuracy = accuracy.eval(feed_dict={
-                x: batch[0], y_: batch[1], keep_prob: 1.0})
-            print('step %d, training accuracy %g' % (i, train_accuracy))
-        train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
-    saver.save(sess, 'SAVE2/model.ckpt')  # 模型储存位置
+    saver.restore(sess, "SAVE2/model.ckpt")
 
-    print('test accuracy %g' % accuracy.eval(feed_dict={
-        x: batch[0], y_: batch[1], keep_prob: 1.0}))
-print(len(a))
+    ll = A.sd.get_all_code()
+    ll.sort()
+    for c in ll:
+        d = A.sd.get_data_by_code(c)
+        df = A.calc_train_data_list_from_df(d)
+        if df is None:
+            continue
+
+        al = int(len(df) / batch_size)
+        for i in range(al):
+            batch = A.get_batch_data_from_list(df, i)
+            if i % 20 == 0:
+                train_accuracy = accuracy.eval(
+                    feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0})
+                print(c, i, train_accuracy)
+            train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+        print(c, "accuracy:", accuracy.eval(
+            feed_dict={x: batch[0], y_: batch[1], keep_prob: 1.0}))
+
+    saver.save(sess, 'SAVE2/model.ckpt')  # 模型储存位置

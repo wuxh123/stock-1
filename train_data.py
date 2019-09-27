@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-27 10:15:46
+#  Last Modified:  2019-09-27 14:15:40
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -15,6 +15,7 @@
 import datetime
 import math
 import numpy as np
+np.set_printoptions(threshold=np.inf)
 import pandas as pd
 from stockdata import stockdata
 
@@ -22,11 +23,11 @@ from stockdata import stockdata
 class train_data:
     def __init__(self):
         self.sd = stockdata()
-        self.batch_size = 25    # 一次训练多少组数据
+        self.batch_size = 200    # 一次训练多少组数据
         self.num_input = 15     # 每组数据的每一行
-        self.timesteps = 20     # 多少个时间序列 (多少行)
-        self.num_classes = 2   # 数据集类别数
-        self.test_size = 5      # 留多少数据用于测试
+        self.timesteps = 5     # 多少个时间序列 (多少行)
+        self.num_classes = 21   # 数据集类别数
+        self.test_size = 0      # 填充多少个0
 
     def calc_delta_days(self, d1, d2):
         d = (datetime.datetime.strptime(d1, "%Y%m%d") - datetime.datetime.strptime(d2, "%Y%m%d")).days
@@ -34,15 +35,16 @@ class train_data:
 
     def make_a_train_data_from_df(self, dfx, y):
         xn = np.array(dfx)
-        xn = xn.reshape(1, self.num_input * self.timesteps)
+        xn = xn.reshape(self.num_input * self.timesteps)
+
+        xnpad = np.zeros(self.test_size)
+        xn = np.append(xn, xnpad, axis=0)
+
+        xn = xn.reshape(1, self.num_input * self.timesteps + self.test_size)
 
         yn = np.zeros(self.num_classes)
-        # _y = int(math.floor(y * self.num_classes / 20.0 + self.num_classes / 2.0 - 0.1))
-        # yn[_y] = 1
-        if y > 0.1:
-            yn[1] = 1
-        else:
-            yn[0] = 1
+        _y = int(math.floor(y * self.num_classes / 20.0 + self.num_classes / 2.0 - 0.1))
+        yn[_y] = 1
         yn = yn.reshape(1, self.num_classes)
         return (xn, yn)
 
@@ -122,6 +124,8 @@ if __name__ == '__main__':
     a = train_data()
     d = a.sd.get_data_by_code('000001.SZ')
     df = a.calc_train_data_list_from_df(d)
+    print(df[0][0])
+    print(df[0][1])
     # d = a.test()
     # c = a.get_batch_data_from_list(d, 100)
     # print(c)
