@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-27 09:54:14
+#  Last Modified:  2019-09-27 10:10:58
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -137,6 +137,13 @@ class stockdata:
 
     def get_index_daily_cyb(self):
         return pickle.loads(zlib.decompress(self.original.get('cyb')))
+
+    def get_index_daily_by_code(self, code):
+        if code[0] == '0':
+            return self.get_index_daily_sz()
+        elif code[0] == '3':
+            return self.get_index_daily_cyb()
+        return self.get_index_daily_sh()
 
     def download_hk_hold(self, date):
         b = self.check_exists_and_save(self.original, self.pro.hk_hold, date, 'hk_hold')

@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-27 09:27:41
+#  Last Modified:  2019-09-27 10:15:46
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -57,15 +57,18 @@ class train_data:
         df['pct_chg'] = df.pct_chg.apply(lambda x: -10.0 if x < -9.5 else x)
 
         df = df[::-1]
+        code = df.iat[0, 0]
 
         cnt = df.shape[0]
         cnt = cnt - min_len
         cnt = cnt // self.batch_size
         cnt = cnt * self.batch_size
-        df = df.tail(cnt + min_len)
 
+        df = df.tail(cnt + min_len)
         df = df.drop(['change', 'ts_code', 'pre_close'], axis=1)
-        dif = self.sd.get_index_daily_sh()
+
+        dif = self.sd.get_index_daily_by_code(code)
+
         dif = dif.drop(['change', 'ts_code', 'pre_close'], axis=1)
         df = pd.merge(df, dif, on='trade_date')
 
@@ -117,6 +120,8 @@ class train_data:
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
+    d = a.sd.get_data_by_code('000001.SZ')
+    df = a.calc_train_data_list_from_df(d)
     # d = a.test()
     # c = a.get_batch_data_from_list(d, 100)
     # print(c)
