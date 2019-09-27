@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-27 14:15:40
+#  Last Modified:  2019-09-27 14:44:47
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -26,7 +26,7 @@ class train_data:
         self.batch_size = 200    # 一次训练多少组数据
         self.num_input = 15     # 每组数据的每一行
         self.timesteps = 5     # 多少个时间序列 (多少行)
-        self.num_classes = 21   # 数据集类别数
+        self.num_classes = 4   # 数据集类别数
         self.test_size = 0      # 填充多少个0
 
     def calc_delta_days(self, d1, d2):

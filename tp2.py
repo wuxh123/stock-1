@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-27 14:15:43
+#  Last Modified:  2019-09-27 14:46:21
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -45,7 +45,6 @@ biases = {'out': tf.Variable(tf.random_normal([num_classes]))}
 
 # 定义LSTM网络
 def LSTM(x, weights, biases):
-
     # Prepare data shape to match `rnn` function requirements
     # 输入数据x的shape: (batch_size, timesteps, n_input)
     # 需要的shape: 按 timesteps 切片，得到 timesteps 个 (batch_size, n_input)
@@ -76,8 +75,7 @@ logits = LSTM(X, weights, biases)
 prediction = tf.nn.softmax(logits)
 
 # 定义损失函数和优化器
-loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
-    logits=logits, labels=Y))
+loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=Y))
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
 train_op = optimizer.minimize(loss_op)
 
