@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-26 16:03:48
+#  Last Modified:  2019-09-27 09:16:54
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -32,6 +32,7 @@ class stockdata:
         # 原始数据存数据库
         # self.original = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
         self.original = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
+        self.temp = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
 
     def get_today_date(self):
         return datetime.datetime.now().strftime("%Y%m%d")

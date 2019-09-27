@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-26 23:17:59
+#  Last Modified:  2019-09-27 09:15:25
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -24,8 +24,8 @@ class train_data:
         self.sd = stockdata()
         self.batch_size = 25    # 一次训练多少组数据
         self.num_input = 15     # 每组数据的每一行
-        self.timesteps = 40     # 多少个时间序列 (多少行)
-        self.num_classes = 21   # 数据集类别数
+        self.timesteps = 20     # 多少个时间序列 (多少行)
+        self.num_classes = 2   # 数据集类别数
         self.test_size = 5      # 留多少数据用于测试
 
     def calc_delta_days(self, d1, d2):
@@ -37,8 +37,13 @@ class train_data:
         xn = xn.reshape(1, self.num_input * self.timesteps)
 
         yn = np.zeros(self.num_classes)
-        _y = int(math.floor(y * self.num_classes / 20.0 + self.num_classes / 2.0 - 0.1))
-        yn[_y] = 1
+        # _y = int(math.floor(y * self.num_classes / 20.0 + self.num_classes / 2.0 - 0.1))
+        # yn[_y] = 1
+        if y > 0.1:
+            yn[1] = 1
+        else:
+            yn[0] = 1
+
         yn = yn.reshape(1, self.num_classes)
         return (xn, yn)
 

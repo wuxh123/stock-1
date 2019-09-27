@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-26 23:04:28
+#  Last Modified:  2019-09-27 08:49:37
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -116,7 +116,7 @@ with tf.Session(config=cfg) as sess:
                 loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
                 print(step, "Loss=" + "{: .4f}".format(loss) + ", Accuracy=" + "{: .3f}".format(acc))
 
-        print(c, " Optimization Finished!")
+        print(c, ": ", acc, " Optimization Finished!")
         saver.save(sess, 'zt/model.ckpt')  # 模型储存位置
 
         # Calculate accuracy for 128 mnist test images
