@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-27 09:15:25
+#  Last Modified:  2019-09-27 09:27:41
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -43,7 +43,6 @@ class train_data:
             yn[1] = 1
         else:
             yn[0] = 1
-
         yn = yn.reshape(1, self.num_classes)
         return (xn, yn)
 

@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-09-27 09:16:54
+#  Last Modified:  2019-09-27 09:54:14
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -266,6 +266,9 @@ class stockdata:
             # self.download_stk_holdertrade(d)
 
     # ********************************************************************
+
+    def test2(self, patt):
+        return self.temp.hkeys(patt)
 
 
 if __name__ == '__main__':
