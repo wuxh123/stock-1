@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-27 14:44:47
+#  Last Modified:  2019-09-28 16:08:01
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -26,7 +26,7 @@ class train_data:
         self.batch_size = 200    # 一次训练多少组数据
         self.num_input = 15     # 每组数据的每一行
         self.timesteps = 5     # 多少个时间序列 (多少行)
-        self.num_classes = 4   # 数据集类别数
+        self.num_classes = 2   # 数据集类别数
         self.test_size = 0      # 填充多少个0
 
     def calc_delta_days(self, d1, d2):
@@ -43,22 +43,37 @@ class train_data:
         xn = xn.reshape(1, self.num_input * self.timesteps + self.test_size)
 
         yn = np.zeros(self.num_classes)
-        _y = int(math.floor(y * self.num_classes / 20.0 + self.num_classes / 2.0 - 0.1))
-        yn[_y] = 1
+        if y > 0.1:
+            yn[1] = 1
+        else:
+            yn[0] = 1
+
+        # _y = int(math.floor(y * self.num_classes / 20.0 + self.num_classes / 2.0 - 0.1))
+        # yn[_y] = 1
         yn = yn.reshape(1, self.num_classes)
         return (xn, yn)
 
     def calc_train_data_list_from_df(self, df):
+        df = df[::-1]
+        df = df.drop(['change', 'ts_code', 'pre_close'], axis=1)
+        df['close_n1'] = df['close'].shift(-1)
+        df['open_n2'] = df['close'].shift(-2)
+        df.drop(df.tail(2).index, inplace=True)
+        df['pct_chg'] = df['open_n2'] - df['close_n1']
+        df.drop(['close_n1', 'open_n2'], axis=1, inplace=True)
+        # df = df.sort_values(by='pct_chg', ascending=False)
+        # print(df[df.trade_date == '20190301'])
+        print(df)
+        return
+
         lt = []
-        min_len = self.timesteps + self.batch_size + 1
+        min_len = self.timesteps + self.batch_size
         if df.shape[0] < min_len:
             return lt
 
-        # 条件删除
-        df['pct_chg'] = df.pct_chg.apply(lambda x: 10.0 if x > 9.5 else x)
-        df['pct_chg'] = df.pct_chg.apply(lambda x: -10.0 if x < -9.5 else x)
+        # df['pct_chg'] = df.pct_chg.apply(lambda x: 10.0 if x > 10.0 else x)
+        # df['pct_chg'] = df.pct_chg.apply(lambda x: -10.0 if x < -10.0 else x)
 
-        df = df[::-1]
         code = df.iat[0, 0]
 
         cnt = df.shape[0]
@@ -67,7 +82,6 @@ class train_data:
         cnt = cnt * self.batch_size
 
         df = df.tail(cnt + min_len)
-        df = df.drop(['change', 'ts_code', 'pre_close'], axis=1)
 
         dif = self.sd.get_index_daily_by_code(code)
 
@@ -85,9 +99,9 @@ class train_data:
 
         df = df.drop(['td2'], axis=1)
 
-        for i in range(cnt - 1 - self.timesteps):
+        for i in range(cnt - self.timesteps):
             dfx = df[i: i + self.timesteps]
-            y = df['pct_chg_x'].iat[i + self.timesteps]
+            y = df['pct_chg_x'].iat[i + self.timesteps - 1]
             xn, yn = self.make_a_train_data_from_df(dfx, y)
             lt.append((xn, yn))
 
@@ -122,10 +136,10 @@ class train_data:
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
-    d = a.sd.get_data_by_code('000001.SZ')
+    d = a.sd.get_data_by_code('600818.SH')
     df = a.calc_train_data_list_from_df(d)
-    print(df[0][0])
-    print(df[0][1])
+    # print(df[0][0])
+    # print(df[0][1])
     # d = a.test()
     # c = a.get_batch_data_from_list(d, 100)
     # print(c)
