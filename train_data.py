@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-28 16:10:19
+#  Last Modified:  2019-09-28 23:01:27
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -23,11 +23,12 @@ from stockdata import stockdata
 class train_data:
     def __init__(self):
         self.sd = stockdata()
-        self.batch_size = 200    # 一次训练多少组数据
-        self.num_input = 15     # 每组数据的每一行
-        self.timesteps = 5     # 多少个时间序列 (多少行)
-        self.num_classes = 2   # 数据集类别数
-        self.test_size = 0      # 填充多少个0
+        self.batch_size = 500       # 一次训练多少组数据
+        self.num_input = 13         # 每组数据的每一行
+        self.timesteps = 40          # 多少个时间序列 (多少行)
+        self.num_classes = 2        # 数据集类别数
+        self.test_size = 0          # 填充多少个0
+        self.ndays = 2              # 几日差值
 
     def calc_delta_days(self, d1, d2):
         d = (datetime.datetime.strptime(d1, "%Y%m%d") - datetime.datetime.strptime(d2, "%Y%m%d")).days
@@ -43,24 +44,22 @@ class train_data:
         xn = xn.reshape(1, self.num_input * self.timesteps + self.test_size)
 
         yn = np.zeros(self.num_classes)
-        if y > 0.1:
+        if y > 0.5:
             yn[1] = 1
         else:
             yn[0] = 1
 
-        # _y = int(math.floor(y * self.num_classes / 20.0 + self.num_classes / 2.0 - 0.1))
-        # yn[_y] = 1
         yn = yn.reshape(1, self.num_classes)
         return (xn, yn)
 
     def calc_train_data_list_from_df(self, df):
         df = df[::-1]
-        df = df.drop(['change', 'ts_code', 'pre_close'], axis=1)
-        df['close_n1'] = df['close'].shift(-1)
-        df['open_n2'] = df['close'].shift(-2)
-        df.drop(df.tail(2).index, inplace=True)
-        df['pct_chg'] = df['open_n2'] - df['close_n1']
-        df.drop(['close_n1', 'open_n2'], axis=1, inplace=True)
+        df = df.drop(['change', 'ts_code', 'pre_close', 'pct_chg'], axis=1)
+        df['buy'] = df['close'].shift(-1)
+        df['sell'] = df['close'].shift(-1 * self.ndays)
+        df.drop(df.tail(self.ndays).index, inplace=True)
+        df['earn'] = 100.0 * (df['sell'] - df['buy']) / df['buy']
+        df.drop(['buy', 'sell'], axis=1, inplace=True)
         # df = df.sort_values(by='pct_chg', ascending=False)
         # print(df[df.trade_date == '20190301'])
         # print(df)
@@ -70,9 +69,6 @@ class train_data:
         min_len = self.timesteps + self.batch_size
         if df.shape[0] < min_len:
             return lt
-
-        # df['pct_chg'] = df.pct_chg.apply(lambda x: 10.0 if x > 10.0 else x)
-        # df['pct_chg'] = df.pct_chg.apply(lambda x: -10.0 if x < -10.0 else x)
 
         code = df.iat[0, 0]
 
@@ -85,10 +81,9 @@ class train_data:
 
         dif = self.sd.get_index_daily_by_code(code)
 
-        dif = dif.drop(['change', 'ts_code', 'pre_close'], axis=1)
+        dif = dif.drop(['change', 'ts_code', 'pre_close', 'pct_chg'], axis=1)
         df = pd.merge(df, dif, on='trade_date')
 
-        self.num_input = df.shape[1]
         cnt = df.shape[0]
 
         df['td2'] = df['trade_date'].shift(1)
@@ -98,10 +93,16 @@ class train_data:
             x['trade_date'], x['td2']), axis=1)
 
         df = df.drop(['td2'], axis=1)
+        dfy = df['earn']
+        df = df.drop(['earn'], axis=1)
+
+        # print(df)
+        # return
+        self.num_input = df.shape[1]
 
         for i in range(cnt - self.timesteps):
             dfx = df[i: i + self.timesteps]
-            y = df['pct_chg_x'].iat[i + self.timesteps - 1]
+            y = dfy.iat[i + self.timesteps - 1]
             xn, yn = self.make_a_train_data_from_df(dfx, y)
             lt.append((xn, yn))
 
@@ -110,8 +111,16 @@ class train_data:
     def get_batch_data_from_list(self, ll, n):
         if len(ll) == 0:
             return None
-        xt, yt = ll[n * self.batch_size]
-        for i in range(1, self.batch_size):
+
+        # full batch
+        if n == -1:
+            rlen = len(ll)
+            xt, yt = ll[0]
+        else:
+            rlen = self.batch_size
+            xt, yt = ll[n * self.batch_size]
+
+        for i in range(1, rlen):
             x, y = ll[i]
             xt = np.vstack([xt, x])
             yt = np.vstack([yt, y])
@@ -138,8 +147,8 @@ if __name__ == '__main__':
     a = train_data()
     d = a.sd.get_data_by_code('600818.SH')
     df = a.calc_train_data_list_from_df(d)
-    # print(df[0][0])
-    # print(df[0][1])
+    print(df[0][0])
+    print(df[0][1])
     # d = a.test()
     # c = a.get_batch_data_from_list(d, 100)
     # print(c)

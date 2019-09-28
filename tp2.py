@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 16:46:59
-#  Last Modified:  2019-09-28 15:56:23
+#  Last Modified:  2019-09-28 23:02:30
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -97,25 +97,25 @@ with tf.Session(config=cfg) as sess:
     sess.run(init)
     saver.restore(sess, "zt/model.ckpt")
 
-    ll = A.sd.get_all_code()
+    # ll = A.sd.get_all_code()
     # ll = A.sd.temp.hkeys("test2")
-    # ll = ['600737.SH']
-    ll.sort()
+    ll = ['600737.SH']
+    # ll.sort()
     for c in ll:
         d = A.sd.get_data_by_code(c)
         df = A.calc_train_data_list_from_df(d)
         if df is None:
             continue
 
-        al = int(len(df) / batch_size)
-        for step in range(al):
-            batch_x, batch_y = A.get_batch_data_from_list(df, step)
-            batch_x = batch_x.reshape((batch_size, timesteps, num_input))
-            sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
-            if step % display_step == 0 or step == 1:
-                loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
-                # print(step, "Loss=" + "{: .4f}".format(loss) + ", Accuracy=" + "{: .3f}".format(acc))
-        print(c, ": ", acc, " Optimization Finished!")
+        for i in range(1):
+            al = int(len(df) / batch_size)
+            for step in range(al):
+                batch_x, batch_y = A.get_batch_data_from_list(df, step)
+                batch_x = batch_x.reshape((batch_size, timesteps, num_input))
+                sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
+                if step % display_step == 0 or step == 1:
+                    loss, acc = sess.run([loss_op, accuracy], feed_dict={X: batch_x, Y: batch_y})
+            print(c[:-3], ":loss=%0.3f " % loss, "acc=%0.4f" % acc,)
         # if acc > 0.8:
         # A.sd.temp.hset("test2", c, str(acc))
         # print("save test:", c, acc)
