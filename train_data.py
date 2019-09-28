@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-28 16:08:01
+#  Last Modified:  2019-09-28 16:10:19
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -63,8 +63,8 @@ class train_data:
         df.drop(['close_n1', 'open_n2'], axis=1, inplace=True)
         # df = df.sort_values(by='pct_chg', ascending=False)
         # print(df[df.trade_date == '20190301'])
-        print(df)
-        return
+        # print(df)
+        # return
 
         lt = []
         min_len = self.timesteps + self.batch_size
