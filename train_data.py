@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-28 23:01:27
+#  Last Modified:  2019-09-29 09:15:56
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -23,7 +23,7 @@ from stockdata import stockdata
 class train_data:
     def __init__(self):
         self.sd = stockdata()
-        self.batch_size = 500       # 一次训练多少组数据
+        self.batch_size = 32       # 一次训练多少组数据
         self.num_input = 13         # 每组数据的每一行
         self.timesteps = 40          # 多少个时间序列 (多少行)
         self.num_classes = 2        # 数据集类别数
