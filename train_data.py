@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-09-29 09:15:56
+#  Last Modified:  2019-10-08 16:16:33
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -60,10 +60,6 @@ class train_data:
         df.drop(df.tail(self.ndays).index, inplace=True)
         df['earn'] = 100.0 * (df['sell'] - df['buy']) / df['buy']
         df.drop(['buy', 'sell'], axis=1, inplace=True)
-        # df = df.sort_values(by='pct_chg', ascending=False)
-        # print(df[df.trade_date == '20190301'])
-        # print(df)
-        # return
 
         lt = []
         min_len = self.timesteps + self.batch_size
@@ -96,8 +92,6 @@ class train_data:
         dfy = df['earn']
         df = df.drop(['earn'], axis=1)
 
-        # print(df)
-        # return
         self.num_input = df.shape[1]
 
         for i in range(cnt - self.timesteps):
@@ -129,8 +123,29 @@ class train_data:
     def get_test_data_df(self):
         pass
 
-    def get_predict_data_df(self):
-        pass
+    def get_predict_data_df(self, code, date):
+        df = self.sd.get_data_by_code(code)
+        df = df[df.trade_date <= date]
+        df = df.head(self.timesteps)
+        df = df[::-1]
+        df = df.drop(['change', 'ts_code', 'pre_close', 'pct_chg'], axis=1)
+
+        dif = self.sd.get_index_daily_by_code(code)
+
+        dif = dif.drop(['change', 'ts_code', 'pre_close', 'pct_chg'], axis=1)
+        df = pd.merge(df, dif, on='trade_date')
+
+        df['td2'] = df['trade_date'].shift(1)
+        df['td2'].iat[0] = df['trade_date'].iat[0]
+
+        df['trade_date'] = df.apply(lambda x: self.calc_delta_days(
+            x['trade_date'], x['td2']), axis=1)
+
+        df = df.drop(['td2'], axis=1)
+
+        xn, _ = self.make_a_train_data_from_df(df, 0.0)
+
+        return xn
 
     def test(self):
         ll = self.sd.get_all_code()
@@ -145,10 +160,12 @@ class train_data:
 if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
-    d = a.sd.get_data_by_code('600818.SH')
-    df = a.calc_train_data_list_from_df(d)
-    print(df[0][0])
-    print(df[0][1])
+    # d = a.sd.get_data_by_code('600737.SH')
+    # df = a.calc_train_data_list_from_df(d)
+    df = a.get_predict_data_df('600737.SH', '20190925')
+    print(df)
+    # print(df[0][0])
+    # print(df[0][1])
     # d = a.test()
     # c = a.get_batch_data_from_list(d, 100)
     # print(c)
