@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-10-09 18:12:27
+#  Last Modified:  2019-10-09 18:39:47
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -195,7 +195,7 @@ class stockdata:
         data = self.pro.daily(ts_code=code, start_date='20000101', end_date=td)
         if data.empty is False:
             self.original.set(code, zlib.compress(pickle.dumps(data), 5))
-            print("save: ", td, code, 'up_limit_list daily', " ok")
+            print("save: ", td, code, 'download_data_by_code', " ok")
 
     def download_date_up_limit_history_data(self, date):
         ld = self.original.get('latest_date')
@@ -294,9 +294,10 @@ if __name__ == '__main__':
         d = "Test: ................."
         # d = A.get_trade_cal_list()
         # A.download_data_by_code('000058.SZ')
-        d = A.get_data_by_code('000058.SZ')
-        # a = A.get_data_by_code('600737.SH')
-        # a = A.get_date_up_limit_ts_code_df('20190925')
+        # A.download_data_by_code('002464.SZ')
+        # d = A.get_data_by_code('002464.SZ')
+        d = A.get_data_by_code('002308.SZ')
+        # d = A.get_date_up_limit_ts_code_df('20190925')
         # A.get_date_up_limit_data_df_list('20190924')
         # A.get_all_code()
         # A.download_all_date_up_limit_history_data()
