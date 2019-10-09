@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-09 17:51:11
+#  Last Modified:  2019-10-09 18:22:01
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -31,7 +31,7 @@ class train_data:
         self.test_size = 0          # 填充多少个0
         # [batch] T1 T2
         self.ndays = 2              # 几日差值
-        self.epochs = 20
+        self.epochs = 60
 
     def calc_delta_days(self, d1, d2):
         d = (datetime.datetime.strptime(d1, "%Y%m%d") -
@@ -223,7 +223,8 @@ if __name__ == '__main__':
             pass
     else:
         # df = a.sd.get_data_by_code('600737.SH')
-        df = a.get_predict_data('600737.SH', '20190925')
+        df = a.sd.get_data_by_code('000058.SZ')
+        # df = a.get_predict_data('600737.SH', '20190925')
         # df = a.calc_train_data_list_from_df(df)
         # df = a.gen_train_data_from_df(df)
         # df['res'] = 0.0

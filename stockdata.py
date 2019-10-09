@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-10-09 14:08:14
+#  Last Modified:  2019-10-09 18:12:27
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -293,12 +293,13 @@ if __name__ == '__main__':
     else:
         d = "Test: ................."
         # d = A.get_trade_cal_list()
-        # A.download_data_by_code('600737.SH')
-        a = A.get_data_by_code('600737.SH')
+        # A.download_data_by_code('000058.SZ')
+        d = A.get_data_by_code('000058.SZ')
+        # a = A.get_data_by_code('600737.SH')
         # a = A.get_date_up_limit_ts_code_df('20190925')
         # A.get_date_up_limit_data_df_list('20190924')
         # A.get_all_code()
         # A.download_all_date_up_limit_history_data()
         # A.download_date_up_limit_history_data('20190925')
-        print(a)
+        print(d)
     print("Time taken:", datetime.datetime.now() - startTime)
