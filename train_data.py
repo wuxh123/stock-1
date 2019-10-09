@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-09 17:30:00
+#  Last Modified:  2019-10-09 17:51:11
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -197,7 +197,7 @@ class train_data:
         df = df.drop(['td2'], axis=1)
         df = df.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))
 
-        xn, _ = self.make_a_train_data_from_df(df, 0.0)
+        xn = np.array(df).reshape(1, self.timesteps, self.num_input, 1)
 
         return xn
 
@@ -222,12 +222,13 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'p':  # get predict data
             pass
     else:
-        df = a.sd.get_data_by_code('600737.SH')
-        # df = a.get_predict_data('600737.SH', '20190925')
+        # df = a.sd.get_data_by_code('600737.SH')
+        df = a.get_predict_data('600737.SH', '20190925')
         # df = a.calc_train_data_list_from_df(df)
-        df = a.gen_train_data_from_df(df)
+        # df = a.gen_train_data_from_df(df)
         # df['res'] = 0.0
-        # print(df)
+        print(df)
+        print(df.shape)
         # print(df.shape)
         # print(df[0][0])
         # print(df[0][1])
