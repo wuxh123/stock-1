@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-10-09 09:18:05
+#  Last Modified:  2019-10-09 13:54:41
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -33,6 +33,8 @@ class stockdata:
         # self.original = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
         self.original = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
         self.temp = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=1)
+        self.train = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=2)
+        self.test = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=3)
 
     def get_today_date(self):
         return datetime.datetime.now().strftime("%Y%m%d")

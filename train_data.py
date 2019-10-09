@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-09 10:05:11
+#  Last Modified:  2019-10-09 13:55:23
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -167,8 +167,8 @@ if __name__ == '__main__':
     startTime = datetime.datetime.now()
     a = train_data()
     # d = a.sd.get_data_by_code('600737.SH')
-    # df = a.calc_train_data_list_from_df(d)
     df = a.get_predict_data_df('600737.SH', '20190925')
+    # df = a.calc_train_data_list_from_df(d)
     print(df)
     # print(df[0][0])
     # print(df[0][1])
