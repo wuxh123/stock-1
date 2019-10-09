@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-09 18:13:08
+#  Last Modified:  2019-10-09 18:21:31
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -56,8 +56,8 @@ for c in ll:
     # print(xn.shape)
     # print(yn.shape)
 
-    model.fit(xn, yn, batch_size=A.batch_size, epochs=100)
-    # model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs)
+    # model.fit(xn, yn, batch_size=A.batch_size, epochs=100)
+    model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs)
     loss, accuracy = model.evaluate(xn, yn, verbose=1)
     print(c, 'loss:%.4f accuracy:%.4f' % (loss, accuracy))
     model.save('stock_keras.h5')
