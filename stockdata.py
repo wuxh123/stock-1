@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-10-09 18:39:47
+#  Last Modified:  2019-10-09 22:47:35
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -214,8 +214,7 @@ class stockdata:
                 print("save: ", date, c, 'up_limit_list daily', " ok")
 
     def get_all_code(self):
-        ll = self.original.keys("*.*")
-        return ll
+        return self.original.keys("*.*")
 
     def get_data_by_code(self, code):
         if self.original.exists(code) == 1:
