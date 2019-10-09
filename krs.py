@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-09 17:29:53
+#  Last Modified:  2019-10-09 17:50:35
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -22,10 +22,6 @@ from keras.models import load_model
 
 from train_data import train_data as trd
 A = trd()
-df = A.sd.get_data_by_code('600737.SH')
-xn, yn = A.gen_train_data_from_df(df)
-print(xn.shape)
-print(yn.shape)
 
 cfg = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
 cfg.gpu_options.per_process_gpu_memory_fraction = 0.9
@@ -47,8 +43,21 @@ model = load_model('stock_keras.h5')
 
 # model.compile(loss=categorical_crossentropy, optimizer=Adadelta(), metrics=['accuracy'])
 
-model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs)
+# ll = A.sd.get_all_code()
+# ll = A.sd.temp.hkeys("test9")
+ll = ['600737.SH']
+# ll = ['600193.SH']
+# ll = ['000425.SZ']
+# ll = ['600818.SH']
+for c in ll:
+    df = A.sd.get_data_by_code(c)
+    xn, yn = A.gen_train_data_from_df(df)
+    # print(xn.shape)
+    # print(yn.shape)
 
-loss, accuracy = model.evaluate(xn, yn, verbose=1)
-print('loss:%.4f accuracy:%.4f' % (loss, accuracy))
-model.save('stock_keras.h5')
+    model.fit(xn, yn, batch_size=A.batch_size, epochs=40)
+    # model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs)
+    loss, accuracy = model.evaluate(xn, yn, verbose=1)
+    print(c, 'loss:%.4f accuracy:%.4f' % (loss, accuracy))
+    model.save('stock_keras.h5')
+
