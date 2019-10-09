@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-08 16:50:42
-#  Last Modified:  2019-10-09 17:54:42
+#  Last Modified:  2019-10-09 18:02:55
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -27,10 +27,12 @@ sess = tf.compat.v1.InteractiveSession(config=cfg)
 
 # 加载
 model = load_model('stock_keras.h5')
-x = A.get_predict_data('600737.SH', '20190925')
+x = A.get_predict_data('600737.SH', '20190911')
+# print(x)
 # 预测
 predict = model.predict(x)
 # 取最大值的位置
+print(predict)
 predict = np.argmax(predict)
 
 # print('index', index)
