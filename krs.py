@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-09 23:48:08
+#  Last Modified:  2019-10-09 23:49:29
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -21,7 +21,7 @@ from keras.optimizers import Adadelta
 from train_data import train_data as trd
 A = trd()
 
-MODEL_NAME = "krs.h5"
+MODEL_NAME = "mdl.h5"
 
 cfg = tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(allow_growth=True))
 cfg.gpu_options.per_process_gpu_memory_fraction = 0.9

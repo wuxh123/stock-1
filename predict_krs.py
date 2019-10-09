@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-08 16:50:42
-#  Last Modified:  2019-10-09 18:20:07
+#  Last Modified:  2019-10-09 23:54:04
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -25,15 +25,15 @@ cfg.allow_soft_placement = True
 sess = tf.compat.v1.InteractiveSession(config=cfg)
 
 
-# 加载
+MODEL_NAME = "mdl.h5"
 C = '000058.SZ'
-D = '20191008'
-model = load_model('stock_keras.h5')
+D = '20191009'
+
+model = load_model(MODEL_NAME)
+
 x = A.get_predict_data(C, D)
 # print(x)
-# 预测
 predict = model.predict(x)
-# 取最大值的位置
 print(predict)
 predict = np.argmax(predict)
 
