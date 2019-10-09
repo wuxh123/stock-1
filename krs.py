@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-09 17:14:21
+#  Last Modified:  2019-10-09 17:20:52
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -32,24 +32,22 @@ cfg.allow_soft_placement = True
 sess = tf.compat.v1.InteractiveSession(config=cfg)
 
 
-model = Sequential()
-model.add(Conv2D(32, (5, 5), activation='relu',
-                 input_shape=[A.timesteps, A.num_input, 1]))
-model.add(Conv2D(64, (5, 5), activation='relu'))
-model.add(MaxPool2D(pool_size=(2, 2)))
-model.add(Flatten())
-model.add(Dropout(0.5))
-model.add(Dense(128, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(A.num_classes, activation='softmax'))
+# model = Sequential()
+# model.add(Conv2D(32, (5, 5), activation='relu', input_shape=[A.timesteps, A.num_input, 1]))
+# model.add(Conv2D(64, (5, 5), activation='relu'))
+# model.add(MaxPool2D(pool_size=(2, 2)))
+# model.add(Flatten())
+# model.add(Dropout(0.5))
+# model.add(Dense(128, activation='relu'))
+# model.add(Dropout(0.5))
+# model.add(Dense(A.num_classes, activation='softmax'))
 
-model.compile(loss=categorical_crossentropy,
-              optimizer=Adadelta(), metrics=['accuracy'])
+# model.compile(loss=categorical_crossentropy, optimizer=Adadelta(), metrics=['accuracy'])
 
-# model = load_model('stock_keras.h5')
+model = load_model('stock_keras.h5')
 
 batch_size = A.batch_size
-epochs = 2
+epochs = 20
 model.fit(xn, yn, batch_size=batch_size, epochs=epochs)
 
 loss, accuracy = model.evaluate(xn, yn, verbose=1)
