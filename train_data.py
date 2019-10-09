@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-09 18:48:02
+#  Last Modified:  2019-10-09 23:22:08
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -79,7 +79,7 @@ class train_data:
             yc = df['close_x'].iat[i + self.timesteps + 1]
             y = 100.0 * (yc - yo) / yo
             ytmp = np.zeros(self.num_classes)
-            if y > 0.5:
+            if y > 1.0:
                 ytmp[1] = 1
             else:
                 ytmp[0] = 1
