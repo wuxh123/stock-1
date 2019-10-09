@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-09 17:57:53
+#  Last Modified:  2019-10-09 18:13:08
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -45,7 +45,8 @@ model = load_model('stock_keras.h5')
 
 # ll = A.sd.get_all_code()
 # ll = A.sd.temp.hkeys("test9")
-ll = ['600737.SH']
+# ll = ['600737.SH']
+ll = ['000058.SZ']
 # ll = ['600193.SH']
 # ll = ['000425.SZ']
 # ll = ['600818.SH']
@@ -55,7 +56,7 @@ for c in ll:
     # print(xn.shape)
     # print(yn.shape)
 
-    model.fit(xn, yn, batch_size=A.batch_size, epochs=40)
+    model.fit(xn, yn, batch_size=A.batch_size, epochs=100)
     # model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs)
     loss, accuracy = model.evaluate(xn, yn, verbose=1)
     print(c, 'loss:%.4f accuracy:%.4f' % (loss, accuracy))

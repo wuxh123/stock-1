@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-08 16:50:42
-#  Last Modified:  2019-10-09 18:02:55
+#  Last Modified:  2019-10-09 18:20:07
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -26,8 +26,10 @@ sess = tf.compat.v1.InteractiveSession(config=cfg)
 
 
 # 加载
+C = '000058.SZ'
+D = '20191008'
 model = load_model('stock_keras.h5')
-x = A.get_predict_data('600737.SH', '20190911')
+x = A.get_predict_data(C, D)
 # print(x)
 # 预测
 predict = model.predict(x)
@@ -37,4 +39,4 @@ predict = np.argmax(predict)
 
 # print('index', index)
 # print('original:', y)
-print('predicted:', predict)
+print('predicted:', C, D, predict)
