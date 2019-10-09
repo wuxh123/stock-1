@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-10-08 15:51:16
+#  Last Modified:  2019-10-09 09:18:05
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -230,16 +230,6 @@ class stockdata:
             pass
 
         return lc
-
-    '''
-    def download_all_date_up_limit_history_data(self):
-        ds_date = self.get_trade_cal_list('20090101')
-        ds_date = ds_date.sort_values(ascending=False)
-        ds_date = ds_date.reset_index(drop=True)
-        dl = ds_date.values.tolist()
-        for d in dl:
-            self.download_date_up_limit_history_data(d)
-    '''
 
     # use local redis db
     def check_all_download_data(self):

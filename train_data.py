@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-08 16:16:33
+#  Last Modified:  2019-10-09 10:05:11
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -25,13 +25,15 @@ class train_data:
         self.sd = stockdata()
         self.batch_size = 32       # 一次训练多少组数据
         self.num_input = 13         # 每组数据的每一行
-        self.timesteps = 40          # 多少个时间序列 (多少行)
+        self.timesteps = 20          # 多少个时间序列 (多少行)
         self.num_classes = 2        # 数据集类别数
         self.test_size = 0          # 填充多少个0
+        # [batch] T1 T2
         self.ndays = 2              # 几日差值
 
     def calc_delta_days(self, d1, d2):
-        d = (datetime.datetime.strptime(d1, "%Y%m%d") - datetime.datetime.strptime(d2, "%Y%m%d")).days
+        d = (datetime.datetime.strptime(d1, "%Y%m%d") -
+             datetime.datetime.strptime(d2, "%Y%m%d")).days
         return float(d)
 
     def make_a_train_data_from_df(self, dfx, y):
@@ -96,6 +98,7 @@ class train_data:
 
         for i in range(cnt - self.timesteps):
             dfx = df[i: i + self.timesteps]
+            dfx = dfx.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))
             y = dfy.iat[i + self.timesteps - 1]
             xn, yn = self.make_a_train_data_from_df(dfx, y)
             lt.append((xn, yn))
@@ -142,6 +145,9 @@ class train_data:
             x['trade_date'], x['td2']), axis=1)
 
         df = df.drop(['td2'], axis=1)
+        # 归一化
+        df = df.apply(lambda x: (x - np.min(x)) / (np.max(x) - np.min(x)))
+        # return df
 
         xn, _ = self.make_a_train_data_from_df(df, 0.0)
 
