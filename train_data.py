@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-10 15:54:05
+#  Last Modified:  2019-10-10 15:58:26
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -85,7 +85,7 @@ class train_data:
             yn = np.vstack((yn, ytmp))
 
         cut = -1 * self.test_size
-        return xn[cut:], yn[cut:], xn[:cut], yn[:cut]
+        return xn[:cut], yn[:cut], xn[cut:], yn[cut:]
 
     def get_test_data_df(self):
         pass

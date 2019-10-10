@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-10 15:55:00
+#  Last Modified:  2019-10-10 16:01:06
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -45,7 +45,6 @@ else:
     model.add(Dropout(0.5))
     model.add(Dense(A.num_classes, activation='softmax'))
 
-    # model.compile(loss=categorical_crossentropy, optimizer=Adadelta(), metrics=['accuracy'])
     model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
 
 model.summary()
@@ -60,7 +59,6 @@ ll = ['000829.SZ']
 for c in ll:
     df = A.sd.get_data_by_code(c)
     xn, yn, xt, yt = A.gen_train_data_from_df(df)
-    # model.fit(xn, yn, batch_size=A.batch_size, epochs=100)
     model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs)
     loss, accuracy = model.evaluate(xt, yt, verbose=1)
     print(c, 'loss:%.4f accuracy:%.4f' % (loss, accuracy))
