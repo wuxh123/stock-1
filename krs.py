@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-10 16:01:06
+#  Last Modified:  2019-10-10 16:05:06
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -43,7 +43,8 @@ else:
     model.add(Dropout(0.5))
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(A.num_classes, activation='softmax'))
+    # model.add(Dense(A.num_classes, activation='softmax'))
+    model.add(Dense(A.num_classes, activation='sigmoid'))
 
     model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
 
