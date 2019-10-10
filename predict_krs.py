@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-08 16:50:42
-#  Last Modified:  2019-10-09 23:54:04
+#  Last Modified:  2019-10-10 10:49:20
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -26,7 +26,7 @@ sess = tf.compat.v1.InteractiveSession(config=cfg)
 
 
 MODEL_NAME = "mdl.h5"
-C = '000058.SZ'
+C = '000829.SZ'
 D = '20191009'
 
 model = load_model(MODEL_NAME)

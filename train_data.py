@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-09 23:22:08
+#  Last Modified:  2019-10-10 14:19:47
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -26,12 +26,11 @@ class train_data:
         self.sd = stockdata()
         self.batch_size = 32        # 一次训练多少组数据
         self.num_input = 13         # 每组数据的每一行
-        self.timesteps = 20         # 多少行
+        self.timesteps = 10         # 多少行
         self.num_classes = 2        # 数据集类别数
         self.test_size = 0          # 填充多少个0
-        # [batch] T1 T2
         self.ndays = 2              # 几日差值
-        self.epochs = 60
+        self.epochs = 40
 
     def calc_delta_days(self, d1, d2):
         d = (datetime.datetime.strptime(d1, "%Y%m%d") -

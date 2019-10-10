@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-09 23:49:29
+#  Last Modified:  2019-10-10 14:02:37
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -53,7 +53,7 @@ model.summary()
 # ll = A.sd.get_all_code()
 # ll = A.sd.temp.hkeys("test9")
 # ll = ['600737.SH']
-ll = ['000058.SZ']
+ll = ['000829.SZ']
 # ll = ['600193.SH']
 # ll = ['000425.SZ']
 # ll = ['600818.SH']
