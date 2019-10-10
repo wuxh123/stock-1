@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-10 15:58:26
+#  Last Modified:  2019-10-10 17:52:39
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -37,10 +37,60 @@ class train_data:
              datetime.datetime.strptime(d2, "%Y%m%d")).days
         return float(d)
 
-    def gen_train_data_from_df(self, df):
+    def get_merge_df_from_code(self, code):
+        df = self.sd.get_data_by_code(code)
         code = df.iat[0, 0]
         df = df[::-1]
         df = df.drop(['change', 'ts_code', 'pre_close', 'pct_chg'], axis=1)
+
+        dif = self.sd.get_index_daily_by_code(code)
+
+        dif = dif.drop(['change', 'ts_code', 'pre_close', 'pct_chg'], axis=1)
+        df = pd.merge(df, dif, on='trade_date')
+
+        td2 = df['trade_date'].shift(1)
+        td2.iat[0] = df['trade_date'].iat[0]
+        df.insert(0, 'td2', td2)
+        df['trade_date'] = df.apply(lambda x: self.calc_delta_days(
+            x['trade_date'], x['td2']), axis=1)
+
+        df = df.drop(['td2'], axis=1)
+        return df
+
+    def gen_lstm_train_test_data_from_code(self, code):
+        df = self.get_merge_df_from_code(code)
+        min_len = self.batch_size + self.test_size + self.ndays
+        if df.shape[0] < min_len:
+            return ()
+
+        cnt = df.shape[0]
+        cnt = cnt - min_len
+        cnt = cnt // self.batch_size
+
+        df = df.tail(cnt * self.batch_size + min_len)
+
+        datanums = df.shape[0] - self.ndays
+
+        yn = np.empty(shape=[0, self.num_classes])
+
+        for i in range(datanums):
+            yo = df['open_x'].iat[i + 1]
+            yc = df['close_x'].iat[i + 2]
+            y = 100.0 * (yc - yo) / yo
+            ytmp = np.zeros(self.num_classes)
+            if y > 1.0:
+                ytmp[1] = 1
+            else:
+                ytmp[0] = 1
+            yn = np.vstack((yn, ytmp))
+
+        df = df[:-2]
+        xn = np.array(df)
+        cut = -1 * self.test_size
+        return xn[:cut], yn[:cut], xn[cut:], yn[cut:]
+
+    def gen_train_test_data_from_code(self, code):
+        df = self.get_merge_df_from_code(code)
 
         min_len = self.timesteps + self.batch_size + self.test_size + self.ndays
         if df.shape[0] < min_len:
@@ -51,18 +101,6 @@ class train_data:
         cnt = cnt // self.batch_size
 
         df = df.tail(cnt * self.batch_size + min_len)
-        dif = self.sd.get_index_daily_by_code(code)
-
-        dif = dif.drop(['change', 'ts_code', 'pre_close', 'pct_chg'], axis=1)
-        df = pd.merge(df, dif, on='trade_date')
-
-        df['td2'] = df['trade_date'].shift(1)
-        df['td2'].iat[0] = df['trade_date'].iat[0]
-
-        df['trade_date'] = df.apply(lambda x: self.calc_delta_days(
-            x['trade_date'], x['td2']), axis=1)
-
-        df = df.drop(['td2'], axis=1)
 
         datanums = df.shape[0] - self.timesteps - self.ndays
 
@@ -86,9 +124,6 @@ class train_data:
 
         cut = -1 * self.test_size
         return xn[:cut], yn[:cut], xn[cut:], yn[cut:]
-
-    def get_test_data_df(self):
-        pass
 
     def get_predict_data(self, code, date):
         df = self.sd.get_data_by_code(code)
@@ -128,20 +163,22 @@ if __name__ == '__main__':
             pass
     else:
         # df = a.sd.get_data_by_code('600737.SH')
-        df = a.sd.get_data_by_code('000058.SZ')
+        # df = a.sd.get_data_by_code('000058.SZ')
         # df = a.get_predict_data('600737.SH', '20190925')
-        # df = a.gen_train_data_from_df(df)
-        x, y, tx, ty = a.gen_train_data_from_df(df)
-        # df['res'] = 0.0
-        print(x.shape)
-        print(y.shape)
-        print(tx.shape)
-        print(ty.shape)
+        # df = a.gen_train_test_data_from_code("600818.SH")
+        df = a.get_merge_df_from_code("600818.SH")
+        print(df)
+        # x, y, tx, ty = a.gen_lstm_train_test_data_from_code("600818.SH")
+        # print(x.shape)
+        # print(y.shape)
+        # print(tx.shape)
+        # print(ty.shape)
         # print(df.shape)
         # print(df[0][0])
         # print(df[0][1])
         # print(c)
         # print(type(c))
         # print(a.calc_delta_days("20190926", "20190821"))
+        pass
 
     print("Time taken:", datetime.datetime.now() - startTime)

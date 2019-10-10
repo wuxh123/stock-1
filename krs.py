@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-10 16:05:06
+#  Last Modified:  2019-10-10 17:52:11
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -58,8 +58,7 @@ ll = ['000829.SZ']
 # ll = ['000425.SZ']
 # ll = ['600818.SH']
 for c in ll:
-    df = A.sd.get_data_by_code(c)
-    xn, yn, xt, yt = A.gen_train_data_from_df(df)
+    xn, yn, xt, yt = A.gen_train_test_data_from_code(c)
     model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs)
     loss, accuracy = model.evaluate(xt, yt, verbose=1)
     print(c, 'loss:%.4f accuracy:%.4f' % (loss, accuracy))
