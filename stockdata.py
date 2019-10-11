@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-10-09 22:47:35
+#  Last Modified:  2019-10-11 16:50:08
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -197,21 +197,27 @@ class stockdata:
             self.original.set(code, zlib.compress(pickle.dumps(data), 5))
             print("save: ", td, code, 'download_data_by_code', " ok")
 
-    def download_date_up_limit_history_data(self, date):
-        ld = self.original.get('latest_date')
-        if date <= ld.decode():
-            return
+    def update_all_code_data(self):
+        lds = self.original.get('latest_date').decode()
+        cal = self.get_trade_cal_list(st_date=lds)
+        cal = cal[cal > lds].tolist()
 
-        if self.original.hexists(date, 'daily') == 0:
-            return
+        ac = self.get_stock_basics()
+        ac = ac[ac.market != '科创板']['ts_code'].tolist()
+        ac.sort()
 
-        td = self.get_today_date()
-        df = self.get_date_up_limit_ts_code_df(date).values.tolist()
-        for c in df:
-            data = self.pro.daily(ts_code=c, start_date='20000101', end_date=td)
-            if data.empty is False:
-                self.original.set(c, zlib.compress(pickle.dumps(data), 5))
-                print("save: ", date, c, 'up_limit_list daily', " ok")
+        for d in cal:
+            di = self.get_daily(d)
+            if di.empty:
+                continue
+            for c in ac:
+                print("update: ", d, c)
+                dc = self.get_data_by_code(c)
+                da = di[di.ts_code == c]
+                if da.empty:
+                    continue
+                da = da.append(dc, ignore_index=True)
+                self.original.set(c, zlib.compress(pickle.dumps(da), 5))
 
     def get_all_code(self):
         return self.original.keys("*.*")
@@ -222,15 +228,7 @@ class stockdata:
         return pd.DataFrame()
 
     def get_date_up_limit_data_df_list(self, date):
-        dl = self.get_date_up_limit_ts_code_df(date).values.tolist()
-        lc = []
-        if len(dl) == 0:
-            return lc
-
-        for c in dl:
-            pass
-
-        return lc
+        return self.get_date_up_limit_ts_code_df(date).values.tolist()
 
     # use local redis db
     def check_all_download_data(self):
@@ -257,8 +255,8 @@ class stockdata:
             self.download_top_inst(d)
             self.download_block_trade(d)
             self.save_date_up_limit_ts_code_df(d)
-            self.download_date_up_limit_history_data(d)
 
+        self.update_all_code_data()
         if self.original.hexists(end_date, 'daily') == 1:
             self.original.set("latest_date", end_date)
 
@@ -294,12 +292,13 @@ if __name__ == '__main__':
         # d = A.get_trade_cal_list()
         # A.download_data_by_code('000058.SZ')
         # A.download_data_by_code('002464.SZ')
-        # d = A.get_data_by_code('002464.SZ')
-        d = A.get_data_by_code('002308.SZ')
+        # A.update_all_code_data()
+        # d = A.get_data_by_code('000001.SZ')
+        d = A.get_data_by_code('300099.SZ')
+        # d = A.get_all_code()
         # d = A.get_date_up_limit_ts_code_df('20190925')
         # A.get_date_up_limit_data_df_list('20190924')
         # A.get_all_code()
         # A.download_all_date_up_limit_history_data()
-        # A.download_date_up_limit_history_data('20190925')
         print(d)
     print("Time taken:", datetime.datetime.now() - startTime)
