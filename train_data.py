@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-10 18:35:00
+#  Last Modified:  2019-10-11 14:10:12
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -27,10 +27,10 @@ class train_data:
         self.batch_size = 32        # 一次训练多少组数据
         self.num_input = 13         # 每组数据的每一行
         self.timesteps = 10         # 多少行
-        self.num_classes = 2        # 数据集类别数
+        self.num_classes = 1        # 数据集类别数
         self.test_size = 3          # 最后几个作为测试数据
         self.ndays = 2              # 几日差值
-        self.epochs = 40
+        self.epochs = 64
 
     def calc_delta_days(self, d1, d2):
         d = (datetime.datetime.strptime(d1, "%Y%m%d") -
@@ -62,7 +62,7 @@ class train_data:
         # min_len = self.batch_size + self.test_size + self.ndays
         min_len = self.timesteps + self.batch_size + self.test_size + self.ndays
         if df.shape[0] < min_len:
-            return ()
+            return None
 
         cnt = df.shape[0]
         cnt = cnt - min_len
@@ -87,8 +87,6 @@ class train_data:
             y = 100.0 * (yc - yo) / yo
             ytmp = np.zeros(self.num_classes)
             if y > 1.0:
-                ytmp[1] = 1
-            else:
                 ytmp[0] = 1
             yn = np.vstack((yn, ytmp))
         cut = -1 * self.test_size
@@ -122,8 +120,6 @@ class train_data:
             y = 100.0 * (yc - yo) / yo
             ytmp = np.zeros(self.num_classes)
             if y > 1.0:
-                ytmp[1] = 1
-            else:
                 ytmp[0] = 1
             yn = np.vstack((yn, ytmp))
 
@@ -173,12 +169,16 @@ if __name__ == '__main__':
         # df = a.gen_train_test_data_from_code("600818.SH")
         # df = a.get_merge_df_from_code("600818.SH")
         # print(df)
-        x, y, tx, ty = a.gen_lstm_train_test_data_from_code("600818.SH")
-        print(x.shape)
-        print(y.shape)
-        print(tx.shape)
-        print(ty.shape)
-        print(x[0])
+        res = a.gen_lstm_train_test_data_from_code("600818.SH")
+        if res is not None:
+            x, y, tx, ty = res
+            print(x.shape)
+            print(y.shape)
+            print(tx.shape)
+            print(ty.shape)
+            print(x[0])
+        else:
+            print("res == None")
         # print(df.shape)
         # print(df[0][0])
         # print(df[0][1])
