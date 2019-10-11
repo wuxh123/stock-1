@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-10-09 11:01:04
-#  Last Modified:  2019-10-10 17:52:11
+#  Last Modified:  2019-10-11 14:47:49
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -17,6 +17,7 @@ import tensorflow as tf
 from keras.models import Sequential, load_model
 from keras.layers import Conv2D, MaxPool2D, Flatten, Dropout, Dense, LSTM
 from keras.optimizers import Adadelta
+from keras.callbacks import EarlyStopping
 
 from train_data import train_data as trd
 A = trd()
@@ -50,17 +51,24 @@ else:
 
 model.summary()
 
+early_stopping = EarlyStopping(monitor='loss', min_delta=0.01, patience=5)
+
 # ll = A.sd.get_all_code()
 # ll = A.sd.temp.hkeys("test9")
 # ll = ['600737.SH']
-ll = ['000829.SZ']
+ll = ['002308.SZ']
 # ll = ['600193.SH']
 # ll = ['000425.SZ']
 # ll = ['600818.SH']
 for c in ll:
-    xn, yn, xt, yt = A.gen_train_test_data_from_code(c)
-    model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs)
-    loss, accuracy = model.evaluate(xt, yt, verbose=1)
-    print(c, 'loss:%.4f accuracy:%.4f' % (loss, accuracy))
-    model.save(MODEL_NAME)
-
+    res = A.gen_train_test_data_from_code(c)
+    if res is not None:
+        xn, yn, xt, yt = res
+        # model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs, callbacks=[early_stopping])
+        model.fit(xn, yn, batch_size=A.batch_size, epochs=A.epochs)
+        loss, accuracy = model.evaluate(xt, yt, verbose=1)
+        print(c, 'loss:%.4f accuracy:%.4f' % (loss, accuracy))
+        print(yt)
+        model.save(MODEL_NAME)
+    else:
+        print("skip ", c)
