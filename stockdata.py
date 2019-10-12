@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-10-12 16:29:17
+#  Last Modified:  2019-10-12 17:26:39
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -322,13 +322,30 @@ class stockdata:
                 print("update:", d, h5key, c)
         s.close()
 
+    def update_index_daily(self):
+        with pd.HDFStore('data.h5', 'a') as s:
+            df = self.pro.index_daily(ts_code='000001.SH')[::-1].reset_index(drop=True)
+            s.put('SH', df, format='t', append=False, data_columns=True)
+            df = self.pro.index_daily(ts_code='399001.SZ')[::-1].reset_index(drop=True)
+            s.put('SZ', df, format='t', append=False, data_columns=True)
+            df = self.pro.index_daily(ts_code='399006.SZ')[::-1].reset_index(drop=True)
+            s.put('CYB', df, format='t', append=False, data_columns=True)
+
+    def test2(self):
+        df = self.pro.index_daily(ts_code='000001.SH')[::-1].reset_index(drop=True)
+        # df.sort_values(by='trade_date', ascending=True, inplace=True)
+        # df = df.reset_index(drop=True)
+        print(df)
+
     def test3(self):
         with pd.HDFStore('data.h5', 'a') as s:
-            df = self.pro.index_daily(ts_code='000001.SH')
-            df.sort_values(by='trade_date', ascending=True, inplace=True)
-            df = df.reset_index(drop=True)
-            s.put('SH', df, format='t', append=False, data_columns=True)
-            df = s['SH']
+            # df = self.pro.index_daily(ts_code='000001.SH')
+            # df.sort_values(by='trade_date', ascending=True, inplace=True)
+            # df = df.reset_index(drop=True)
+            # s.put('SH', df, format='t', append=False, data_columns=True)
+            df = s['CYB']
+            df = df[df.trade_date > '20190901']
+            # df.to_excel('a.xlsx', encoding='utf-8', index=False)
             # s['SH'] = df
             # df = s['SZ000005']
             # df.sort_values(by='trade_date', ascending=True, inplace=True)
@@ -364,6 +381,8 @@ if __name__ == '__main__':
         # d = A.get_data_by_code('600818.SH')
         # A.init_all_data_to_h5()
         # A.update_all_data_h5()
+        # A.update_index_daily()
+        # A.test2()
         A.test3()
         # d = A.get_all_code()
         # d = A.get_date_up_limit_ts_code_df('20190925')
