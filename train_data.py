@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-09-19 10:07:56
-#  Last Modified:  2019-10-11 14:47:45
+#  Last Modified:  2019-10-11 17:42:24
 #       Revision:  none
 #       Compiler:  gcc #
 #         Author:  zt ()
@@ -48,13 +48,14 @@ class train_data:
         dif = dif.drop(['change', 'ts_code', 'pre_close', 'pct_chg'], axis=1)
         df = pd.merge(df, dif, on='trade_date')
 
-        td2 = df['trade_date'].shift(1)
-        td2.iat[0] = df['trade_date'].iat[0]
-        df.insert(0, 'td2', td2)
-        df['trade_date'] = df.apply(lambda x: self.calc_delta_days(
-            x['trade_date'], x['td2']), axis=1)
-
-        df = df.drop(['td2'], axis=1)
+        # td2 = df['trade_date'].shift(1)
+        # td2.iat[0] = df['trade_date'].iat[0]
+        # df.insert(0, 'td2', td2)
+        # df['trade_date'] = df.apply(lambda x: self.calc_delta_days(x['trade_date'], x['td2']), axis=1)
+        # df = df.drop(['td2'], axis=1)
+        df = df.drop(['trade_date'], axis=1)
+        df['res1'] = 1.0
+        print(df)
         return df
 
     def gen_lstm_train_test_data_from_code(self, code):
@@ -167,18 +168,8 @@ if __name__ == '__main__':
         # df = a.sd.get_data_by_code('000058.SZ')
         # df = a.get_predict_data('600737.SH', '20190925')
         # df = a.gen_train_test_data_from_code("600818.SH")
-        # df = a.get_merge_df_from_code("600818.SH")
+        df = a.get_merge_df_from_code("600818.SH")
         # print(df)
-        res = a.gen_lstm_train_test_data_from_code("600818.SH")
-        if res is not None:
-            x, y, tx, ty = res
-            print(x.shape)
-            print(y.shape)
-            print(tx.shape)
-            print(ty.shape)
-            print(x[0])
-        else:
-            print("res == None")
         # print(df.shape)
         # print(df[0][0])
         # print(df[0][1])

@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-10-11 16:50:08
+#  Last Modified:  2019-10-12 15:27:10
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -29,6 +29,7 @@ class stockdata:
             tk = pickle.load(f)
             ts.set_token(tk)
         self.pro = ts.pro_api()
+        self.hdf5 = "data.h5"
         # 原始数据存数据库
         # self.original = redis.Redis(host='192.168.0.188', password='zt@123456', port=6379, db=0)
         self.original = redis.Redis(host='127.0.0.1', password='zt@123456', port=6379, db=0)
@@ -43,7 +44,7 @@ class stockdata:
         df = self.pro.stock_basic(list_status="L")
         df = df.reset_index(drop=True)
         self.original.set('stock_basic', zlib.compress(pickle.dumps(df), 5))
-        print("save: ", 'stock_basic ok')
+        print("save:", 'stock_basic ok')
 
     def get_stock_basics(self):
         return pickle.loads(zlib.decompress(self.original.get('stock_basic')))
@@ -55,7 +56,7 @@ class stockdata:
         df = df['cal_date']
         df = df.reset_index(drop=True)
         self.original.set('trade_cal', zlib.compress(pickle.dumps(df), 5))
-        print("save: ", 'trade_cal ok')
+        print("save:", 'trade_cal ok')
 
     def get_trade_cal_list(self, st_date='20000101'):
         cal = pickle.loads(zlib.decompress(self.original.get('trade_cal')))
@@ -155,6 +156,8 @@ class stockdata:
     def download_block_trade(self, date):
         if date < "20160108":
             return
+        if date == self.get_today_date():
+            return
         b = self.check_exists_and_save(self.original, self.pro.block_trade, date, 'block_trade')
         if b:
             time.sleep(0.8)
@@ -225,7 +228,7 @@ class stockdata:
     def get_data_by_code(self, code):
         if self.original.exists(code) == 1:
             return pickle.loads(zlib.decompress(self.original.get(code)))
-        return pd.DataFrame()
+        return self.pro.daily(ts_code=code)
 
     def get_date_up_limit_data_df_list(self, date):
         return self.get_date_up_limit_ts_code_df(date).values.tolist()
@@ -269,9 +272,67 @@ class stockdata:
             # self.download_stk_holdertrade(d)
 
     # ********************************************************************
+    def init_all_data_to_h5(self):
+        df = self.pro.stock_basic(list_status="L").reset_index(drop=True)
+        ac = df['ts_code'].tolist()
+        ac.sort()
 
-    def test2(self, patt):
-        return self.temp.hkeys(patt)
+        s = pd.HDFStore(self.hdf5, 'a', complevel=9, complib='blosc')
+        skey = s.keys()
+        skey.sort()
+
+        for c in ac:
+            h5key = '/' + c[-2:] + c[:-3]
+            if h5key in skey:
+                continue
+            # df = self.pro.daily(ts_code=c)
+            df = self.pro.daily(ts_code=c, end_date='20191008')
+            time.sleep(0.3)
+            if df.empty:
+                continue
+            df.sort_values(by='trade_date', ascending=True, inplace=True)
+            s.put(h5key, df, format='t', append=True, data_columns=True)
+            print("save:", h5key, c, "to", self.hdf5)
+        s.close()
+
+    def update_all_data_h5(self):
+        ac = self.pro.stock_basic(list_status="L").reset_index(drop=True)['ts_code'].tolist()
+        ac.sort()
+
+        c = ac[0]
+        ac1_h5_key = '/' + c[-2:] + c[:-3]
+
+        s = pd.HDFStore(self.hdf5, 'a', complevel=5, complib='lzo')
+        latest_update = s[ac1_h5_key].tail(1)['trade_date'].reset_index(drop=True).loc[0]
+
+        td = self.get_today_date()
+        cal = self.pro.query('trade_cal', start_date=latest_update, end_date=td)
+        cal = cal[cal.cal_date > latest_update]
+        cal = cal[cal.is_open == 1]['cal_date'].reset_index(drop=True)
+        cal.sort_values(ascending=True, inplace=True)
+        cal = cal.tolist()
+
+        for d in cal:
+            dfd = self.pro.daily(trade_date=d)
+            dfd.sort_values(by="ts_code", ascending=True, inplace=True)
+            code_list = dfd['ts_code'].tolist()
+            for c in code_list:
+                h5key = c[-2:] + c[:-3]
+                dfc = dfd[dfd.ts_code == c]
+                s.put(h5key, dfc, format='t', append=True, data_columns=True)
+                print("update:", d, h5key, c)
+        s.close()
+
+    def test3(self):
+        with pd.HDFStore('data.h5', 'a') as s:
+            df = s['SZ000005']
+            df.sort_values(by='trade_date', ascending=True, inplace=True)
+            dfd = self.pro.daily(trade_date='20191008')
+            dfd = dfd[dfd.ts_code == '000005.SZ']
+            print(df)
+            print(type(df))
+            print(dfd)
+        # df = df.drop_duplicates()
 
 
 if __name__ == '__main__':
@@ -287,14 +348,20 @@ if __name__ == '__main__':
             A.download_all_data()
         elif sys.argv[1] == 'd2':
             A.download_all_data2_save()
+        elif sys.argv[1] == 'hi':
+            A.init_all_data_to_h5()
+        elif sys.argv[1] == 'hu':
+            A.update_all_data_h5()
     else:
         d = "Test: ................."
         # d = A.get_trade_cal_list()
         # A.download_data_by_code('000058.SZ')
         # A.download_data_by_code('002464.SZ')
         # A.update_all_code_data()
-        # d = A.get_data_by_code('000001.SZ')
-        d = A.get_data_by_code('300099.SZ')
+        # d = A.get_data_by_code('600818.SH')
+        # A.init_all_data_to_h5()
+        # A.update_all_data_h5()
+        A.test3()
         # d = A.get_all_code()
         # d = A.get_date_up_limit_ts_code_df('20190925')
         # A.get_date_up_limit_data_df_list('20190924')
