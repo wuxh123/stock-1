@@ -6,7 +6,7 @@
 #
 #        Version:  1.0
 #        Created:  2019-06-18 16:07:49
-#  Last Modified:  2019-10-12 15:27:10
+#  Last Modified:  2019-10-12 16:29:17
 #       Revision:  none
 #       Compiler:  gcc
 #
@@ -50,9 +50,8 @@ class stockdata:
         return pickle.loads(zlib.decompress(self.original.get('stock_basic')))
 
     def download_trade_cal_list(self):
-        todaydate = self.get_today_date()
-        df = self.pro.query('trade_cal', start_date='20000101', end_date=todaydate)
-        df = df[df.is_open == 1]
+        td = self.get_today_date()
+        df = self.pro.query('trade_cal', is_open=1, end_date=td)
         df = df['cal_date']
         df = df.reset_index(drop=True)
         self.original.set('trade_cal', zlib.compress(pickle.dumps(df), 5))
@@ -285,8 +284,8 @@ class stockdata:
             h5key = '/' + c[-2:] + c[:-3]
             if h5key in skey:
                 continue
-            # df = self.pro.daily(ts_code=c)
-            df = self.pro.daily(ts_code=c, end_date='20191008')
+            df = self.pro.daily(ts_code=c)
+            # df = self.pro.daily(ts_code=c, end_date='20191008')
             time.sleep(0.3)
             if df.empty:
                 continue
@@ -300,15 +299,15 @@ class stockdata:
         ac.sort()
 
         c = ac[0]
-        ac1_h5_key = '/' + c[-2:] + c[:-3]
+        ac1_h5_key = c[-2:] + c[:-3]
 
         s = pd.HDFStore(self.hdf5, 'a', complevel=5, complib='lzo')
-        latest_update = s[ac1_h5_key].tail(1)['trade_date'].reset_index(drop=True).loc[0]
+        ld = s[ac1_h5_key].tail(1)['trade_date'].reset_index(drop=True).loc[0]
 
         td = self.get_today_date()
-        cal = self.pro.query('trade_cal', start_date=latest_update, end_date=td)
-        cal = cal[cal.cal_date > latest_update]
-        cal = cal[cal.is_open == 1]['cal_date'].reset_index(drop=True)
+        cal = self.pro.query('trade_cal', is_open=1, start_date=ld, end_date=td)
+        cal = cal[cal.cal_date > ld]
+        cal = cal['cal_date'].reset_index(drop=True)
         cal.sort_values(ascending=True, inplace=True)
         cal = cal.tolist()
 
@@ -325,14 +324,18 @@ class stockdata:
 
     def test3(self):
         with pd.HDFStore('data.h5', 'a') as s:
-            df = s['SZ000005']
+            df = self.pro.index_daily(ts_code='000001.SH')
             df.sort_values(by='trade_date', ascending=True, inplace=True)
-            dfd = self.pro.daily(trade_date='20191008')
-            dfd = dfd[dfd.ts_code == '000005.SZ']
+            df = df.reset_index(drop=True)
+            s.put('SH', df, format='t', append=False, data_columns=True)
+            df = s['SH']
+            # s['SH'] = df
+            # df = s['SZ000005']
+            # df.sort_values(by='trade_date', ascending=True, inplace=True)
+            # dfd = self.pro.daily(trade_date='20191008')
+            # dfd = dfd[dfd.ts_code == '000005.SZ']
             print(df)
             print(type(df))
-            print(dfd)
-        # df = df.drop_duplicates()
 
 
 if __name__ == '__main__':
